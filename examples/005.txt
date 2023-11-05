@@ -1,0 +1,3 @@
+ElDotDiff = o <- I^2_1
+DotDiff = I^2_1 <- ElDotDiff | I^3_3
+

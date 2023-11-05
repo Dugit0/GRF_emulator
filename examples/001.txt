@@ -1,0 +1,11 @@
+F = asdf
+F = sdfa
+asd | a | s | v
+adfsf | aas <- sdf | asdf23
+asdf <- sdf <- sdfaf | sdf <- sdfadf
+asdfadf ? 234124
+asdf ? 1
+sdfadf | asdfa <- asdfa ? 323
+
+sg = o <- s | 0^2
+

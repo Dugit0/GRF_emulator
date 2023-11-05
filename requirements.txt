@@ -1,2 +1,1 @@
-parse==1.6.5
-pyparser==1.0
+pyparsing==3.1.1
