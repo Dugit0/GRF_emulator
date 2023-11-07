@@ -2,7 +2,6 @@ import pyparsing as pp
 import os
 
 """
-СКОБКИ!!!
 common_name -     <pp.identchars><pp.identbodychars>
 I -               I^<nums>_<nums>
 constant -        <nums>^<nums>
@@ -11,6 +10,8 @@ composition -     ... | ...
 recursion -       ... <- ...
 minimisation -    ... ? <nums>
 call -            !<func_name>(<zero or more: <nums>, <nums>, ...>)
+open_bracket -    (
+close_bracket -   )
 """
 func_I = 'I' + pp.Suppress('^') + pp.Word(pp.nums) + pp.Suppress('_') + pp.Word(pp.nums)
 func_I.set_name('I')
@@ -23,10 +24,12 @@ definition = func_name + pp.Char('=')
 composition = pp.Char('|')
 recursion = pp.Literal('<-')
 minimization = '?' + pp.Word(pp.nums)
-func_call = '!' + all_functions + '(' + pp.Opt(pp.Word(pp.nums)) + pp.ZeroOrMore(',' + pp.Word(pp.nums)) + ')'
+func_call = '!' + all_functions + '(' + pp.Opt(pp.Word(pp.nums)) + pp.ZeroOrMore(pp.Suppress(',') + pp.Word(pp.nums)) + ')'
+open_bracket = pp.Char('(')
+close_bracket = pp.Char(')')
 # expr = pp.Or([func_name, func_I, constant])
 # expr = func_name ^ func_I ^ constant
-expr = pp.ZeroOrMore(func_I ^ constant ^ func_name ^ definition ^ composition ^ recursion ^ minimization ^ func_call)
+expr = pp.ZeroOrMore(func_I ^ constant ^ func_name ^ definition ^ composition ^ recursion ^ minimization ^ func_call ^ open_bracket ^ close_bracket)
 
 
 
