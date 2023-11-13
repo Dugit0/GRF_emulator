@@ -1,0 +1,28 @@
+?start: [def (" " def)*] " " call
+def: name "=" exp
+?exp: "(" exp ")"
+   | comp
+   | rec
+   | min
+   | name
+   | i
+   | const
+comp: name "|" exp (" " exp)*
+rec: exp "<-" exp
+min: exp "?" INT
+?func: name
+    | i
+    | const
+call: "!" func "(" [INT ("," INT)*]  ")"
+name: CNAME
+i: "I" "^" INT "_" INT
+const: INT "^" INT
+
+
+%import common.CNAME
+%import common.INT
+%import common.SH_COMMENT
+%import common.C_COMMENT
+%ignore SH_COMMENT      // Comment of the form # ... (to end of line)
+%ignore C_COMMENT       // Comment of the form /* ... */
+
