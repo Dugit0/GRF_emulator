@@ -1,2 +1,2 @@
-Mul = o <- Sum | I^3_1 I^3_3
+Mul = o <- Sum | I^3_1 I^3_3 |
 !sg(0)

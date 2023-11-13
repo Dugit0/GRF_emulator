@@ -1,10 +1,19 @@
 F = asdf
-F = sdfa
-F = asd | a | s | v
-F = adfsf | aas <- sdf | asdf23
-F = asdf <- sdf <- sdfaf | sdf <- sdfadf
+F
+                    
+        
+
+=       sdfa
+
+
+
+F = asd | a | s | v |||
+F = adfsf | aas | <- sdf | asdf23 |
+F = asdf <- sdf <- sdfaf | sdf <- sdfadf |
 F = asdfadf ? 234124
 F = asdf ? 1
-F = sdfadf | asdfa <- asdfa ? 323
-sg = o <- s | 0^2
-!sg(0)
+F = sdfadf | asdfa | <- asdfa ? 323
+sg = o <- s | 0^2 |
+
+!sg(0, 2, 4)
+

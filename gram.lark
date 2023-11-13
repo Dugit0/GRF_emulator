@@ -1,4 +1,4 @@
-?start: [def (" " def)*] " " call
+?start: [def ([" "] def)*] call
 def: name "=" exp
 ?exp: "(" exp ")"
    | comp
@@ -7,7 +7,7 @@ def: name "=" exp
    | name
    | i
    | const
-comp: name "|" exp (" " exp)*
+comp: name "|" exp (" " exp)* "|"
 rec: exp "<-" exp
 min: exp "?" INT
 ?func: name

@@ -6,12 +6,11 @@ def my_parce(code):
     with open("gram.lark") as file_gramm:
         grammar = file_gramm.read()
     # code = re.split(r'[ \n\t]', code)
-    code = re.split(r'[ \n]', code)
+    code = re.split(r'[ \t\f\r\n]+', code)
     code = ' '.join(code)
-    code = code.replace(' = ', '=')
-    code = code.replace(' | ', '|')
-    code = code.replace(' <- ', '<-')
-    code = code.replace(' ? ', '?')
+    for sym in ['=', '|', '<-', '?', ',', '(', ')', '!', '^', '_']:
+        code = code.replace(f' {sym}', sym)
+        code = code.replace(f'{sym} ', sym)
     code = code.strip()
     print(code)
     print('==============================================')
