@@ -1,4 +1,4 @@
-?start: [def ([" "] def)*] call
+start: [def ([" "] def)*]
 def: name "=" exp
 ?exp: "(" exp ")"
    | comp
@@ -21,8 +21,10 @@ const: INT "^" INT
 
 %import common.CNAME
 %import common.INT
+%import common.WS
 %import common.SH_COMMENT
 %import common.C_COMMENT
-%ignore SH_COMMENT      // Comment of the form # ... (to end of line)
-%ignore C_COMMENT       // Comment of the form /* ... */
+%ignore SH_COMMENT         // Comment of the form # ... (to end of line)
+%ignore C_COMMENT          // Comment of the form /* ... */
+%ignore WS
 
