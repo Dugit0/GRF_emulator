@@ -1,48 +1,39 @@
 from lark import Lark
 import os
 import sys
+from tqdm import tqdm
 
 
+# -------------- Parcer functions --------------
 def get_parser(gramm_name):
     with open(gramm_name) as file_gramm:
         grammar = file_gramm.read()
     return Lark(grammar, start="start")
+
 
 def my_parce(code, gramm_name):
     parcer = get_parser(gramm_name)
     return parcer.parse(code)
 
 
-
-# path_to_tests = 'examples'
-# for test_filename in sorted(os.listdir(path_to_tests))[:4]:
-#     with open(os.path.join(path_to_tests, test_filename)) as test_file:
-#         test = test_file.read()
-#     print(f"---------------- TEST {test_filename} ----------------")
-#     test = test.split('!!!')
-#     if len(test) != 2:
-#         print("'!!!' is reserved", file=sys.stderr)
-#         sys.exit(1)
-#     definition, call = test[0], test[1]
-#     print(f"----------------------{len(test_filename) * '-'}-----------------")
-#     print(my_parce(definition, "def_gram.lark"))
-#     print(my_parce(call, "call_gram.lark"))
-#     print(f"----------------------{len(test_filename) * '-'}-----------------")
-
-# with open('examples/000.txt') as test_file:
-#     test = test_file.read()
-
-
+# -------------- Custom exception --------------
 class ArgsError(Exception):
     def __init__(self, expected, received):
         self.expected = expected
         self.received = received
     def __str__(self):
-        return f"Number of arguments mismatch. Expected - {self.expected}. Received - {self.received}"
+        return f"number of arguments mismatch. Expected - {self.expected}. Received - {self.received}"
 
 
+class DefError(Exception):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return f"name '{self.name}' is not defined"
+
+# -------------- Functions --------------
 class Func:
-    def __init__(self, n=1, name=None):
+    def __init__(self, n=1, name='Unnamed'):
         self.n = n
         self.name = name
         self.call_func = lambda : None
@@ -55,7 +46,7 @@ class Func:
 
 
 def func_o():
-    res = Func(n=1, name='o')
+    res = Func(1, 'o')
     def new_func(*args):
         return 0
     res.call_func = new_func
@@ -63,7 +54,7 @@ def func_o():
 
 
 def func_s():
-    res = Func(n=1, name='s')
+    res = Func(1, 's')
     def new_func(*args):
         return args[0] + 1
     res.call_func = new_func
@@ -74,6 +65,14 @@ def func_i(n, m):
     res = Func(n, f'i^{n}_{m}')
     def new_func(*args):
         return args[m - 1]
+    res.call_func = new_func
+    return res
+
+
+def func_const(const, n):
+    res = Func(n, f'{const}^{n}')
+    def new_func(*args):
+        return const
     res.call_func = new_func
     return res
 
@@ -107,53 +106,110 @@ def recursion(base, func):
     return res
 
 def minimisation():
+    # TODO: write this!!!
     pass
 
 
 
-# Sum = I^1_1 <- s | I^3_3 |
-fun = composition(func_s(), func_i(3, 3))
-summ = recursion(func_i(1, 1), fun)
-for i in range(1, 100):
-    for j in range(1, 100):
-        if summ(i, j) != i + j:
-            print(f"Error! {i = }, {j = }")
-            break
+test = """
+# a = o
+# a = s
+# a = I^1_1
+# a = myfunc
+# a = 12^12
+# a = o | s |
+# a = o <- I^3_1
+# a = o ? 12
+Sum = I^1_1 <- s | I^3_3 |
+Mul = o <- Sum | I^3_1 I^3_3 |
+# Pow = s | o | <- Mul | I^3_1 I^3_3 |
+!!!
+Pow(2, 5)
+"""
 
-# test = """
-# Sum = I^1_1 <- s | I^3_3 |
-# Mul = o <- Sum | I^3_1 I^3_3 |
-# # Pow = s | o | <- Mul | I^3_1 I^3_3 |
-# !!!
-# Pow(2, 5)
-# """
-# print(f"---------------- TEST 000 ----------------")
-# test = test.split('!!!')
-# if len(test) != 2:
-#     print("'!!!' is reserved", file=sys.stderr)
-#     sys.exit(1)
-# definition, call = test[0], test[1]
-# print(definition)
-# # print(call)
-# tree = my_parce(definition, "def_gram.lark")
-# print(tree.pretty())
-# print(tree)
-# print('===================')
-#
-# print(tree.children)
-#
-#
-# for i in tree.children:
-#     print(i.data, sep='\n\n\n')
-#     print('----')
+test = test.split('!!!')
+if len(test) != 2:
+    print("'!!!' is reserved", file=sys.stderr)
+    sys.exit(1)
 
+definition, call = test[0], test[1]
+print(definition)
 
+tree = my_parce(definition, "def_gram.lark")
+print(tree.pretty())
+print('===================')
+
+def get_func(func_name):
+    global definition_dict
+    if func_name not in definition_dict.keys():
+        raise DefError(func_name)
+    # Возможна лажа с тем, что это ссылка на экземпляр!!!
+    # Протестировать!!!
+    return definition_dict[func_name]
 
 
+def gen_func(tree):
+    print(f"{tree.data.value = }")
+    # print(f"name of tree = {tree.children[0].value}")
+    if tree.data.value == 'name':
+        if tree.children[0].value == 'o':
+            return func_o()
+        elif tree.children[0].value == 's':
+            return func_s()
+        else:
+            return get_func(tree.children[0].value)
+    elif tree.data.value == 'i':
+        return func_i(*list(map(lambda a: int(a.value), tree.children)))
+    elif tree.data.value == 'const':
+        return func_const(*list(map(lambda a: int(a.value), tree.children)))
+    elif tree.data.value == 'comp':
+        return composition(*list(map(lambda a: gen_func(a), tree.children)))
+    elif tree.data.value == 'rec':
+        return recursion(*list(map(lambda a: gen_func(a), tree.children)))
+    elif tree.data.value == 'min':
+        return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
+    else:
+        print("Unexpected!!!")
+        print(tree)
+
+definition_dict = {}
+for def_tree in tree.children:
+    name = def_tree.children[0].children[0].value
+    func = gen_func(def_tree.children[1])
+    func.name = name
+    definition_dict[name] = func
+    # print(func, repr(func))
+    # print(*def_tree.children, sep="\n--\n")
+
+    # definition[]
+    print('----')
+
+
+mull = definition_dict['Mul']
+print(mull(9, 7))
 
 
 
 
+
+
+# path_to_tests = 'examples'
+# for test_filename in sorted(os.listdir(path_to_tests))[:4]:
+#     with open(os.path.join(path_to_tests, test_filename)) as test_file:
+#         test = test_file.read()
+#     print(f"---------------- TEST {test_filename} ----------------")
+#     test = test.split('!!!')
+#     if len(test) != 2:
+#         print("'!!!' is reserved", file=sys.stderr)
+#         sys.exit(1)
+#     definition, call = test[0], test[1]
+#     print(f"----------------------{len(test_filename) * '-'}-----------------")
+#     print(my_parce(definition, "def_gram.lark"))
+#     print(my_parce(call, "call_gram.lark"))
+#     print(f"----------------------{len(test_filename) * '-'}-----------------")
+
+# with open('examples/000.txt') as test_file:
+#     test = test_file.read()
 
 
 
