@@ -125,12 +125,13 @@ def get_func(func_name):
 def gen_func(tree):
     mod = tree.data
     if mod == 'name':
-        if tree.children[0].value == 'o':
+        name_val = tree.children[0].value
+        if name_val == 'o':
             return func_o()
-        elif tree.children[0].value == 's':
+        elif name_val == 's':
             return func_s()
         else:
-            return get_func(tree.children[0].value)
+            return get_func(name_val)
     elif mod == 'i':
         return func_i(*list(map(lambda a: int(a.value), tree.children)))
     elif mod == 'const':
@@ -145,6 +146,51 @@ def gen_func(tree):
         print("Unexpected node in AST", file=sys.stderr)
         print(tree, file=sys.stderr)
         sys.exit(1)
+
+
+def parse_def(definition):
+    tree = my_parce(definition, "def_gram.lark")
+    print(tree.pretty())
+    print('===================')
+    for def_tree in tree.children:
+        # print(def_tree.pretty())
+        name = def_tree.children[0].children[0].value
+        func = gen_func(def_tree.children[1])
+        func.name = name
+        Defined.func[name] = func
+        print(func, repr(func))
+        print('----')
+
+
+def parse_call(call):
+    ans = []
+    tree = my_parce(call, "call_gram.lark")
+    print(tree.pretty())
+    print('===================')
+    for call_tree in tree.children:
+        call_body = call_tree.children[0]
+        # print(call_tree.pretty())
+        mod = call_body.data.value
+        if mod == 'name':
+            name_val = call_body.children[0].value
+            if name_val == 'o':
+                func = func_o()
+            elif name_val == 's':
+                func = func_s()
+            else:
+                func = get_func(name_val)
+        elif mod == 'i':
+            func = func_i(*list(map(lambda a: int(a.value), call_body.children)))
+        elif mod == 'const':
+            func = func_const(*list(map(lambda a: int(a.value), call_body.children)))
+        else:
+            print("Unexpected node in AST", file=sys.stderr)
+            print(tree, file=sys.stderr)
+            sys.exit(1)
+        args = tuple(map(lambda a: int(a.value), call_tree.children[1:]))
+        ans.append((func, args))
+        # print('----')
+    return tuple(ans)
 
 
 # ------------- Тестироване грамматики -------------
@@ -169,23 +215,35 @@ def gen_func(tree):
 
 if __name__ == "__main__":
 
+#     test = """
+# # a = o
+# # a = s
+# # a = I^1_1
+# # a = myfunc
+# # a = 12^12
+# # a = o | s |
+# # a = o <- I^3_1
+# # a = o ? 12
+# Sum = I^1_1 <- s | I^3_3 |
+# Mul = o <- Sum | I^3_1 I^3_3 |
+# # Pow = s | o | <- Mul | I^3_1 I^3_3 |
+# !!!
+# Sum(10, 10)
+# Mul(9, 9)
+# Sum(100, 0, 123)
+# Mul(7, 9)
+#     """
     test = """
-# a = o
-# a = s
-# a = I^1_1
-# a = myfunc
-# a = 12^12
-# a = o | s |
-# a = o <- I^3_1
-# a = o ? 12
 Sum = I^1_1 <- s | I^3_3 |
 Mul = o <- Sum | I^3_1 I^3_3 |
-# Pow = s | o | <- Mul | I^3_1 I^3_3 |
+Pow = s | o | <- Mul | I^3_1 I^3_3 |
+
 !!!
-Sum(10, 10)
-Mul(9, 9)
-Sum(100, 0, 123)
-Mul(7, 9)
+o(12313)
+s(123)
+I^5_2(1, 2, 3, 4, 5)
+1231^2(123, 323)
+Pow(2, 5)
     """
 
     test = test.split('!!!')
@@ -195,34 +253,14 @@ Mul(7, 9)
 
     definition, call = test[0], test[1]
     print(definition)
-
-    tree = my_parce(definition, "def_gram.lark")
-    print(tree.pretty())
-    print('===================')
-
-    for def_tree in tree.children:
-        # print(def_tree.pretty())
-        name = def_tree.children[0].children[0].value
-        func = gen_func(def_tree.children[1])
-        func.name = name
-        Defined.func[name] = func
-        print(func, repr(func))
-        print('----')
-
-
+    parse_def(definition)
     print('================================')
+    
     print(call)
+    called_func = parse_call(call)
+    for func, args in called_func:
+        print(func(*args))
 
-    tree = my_parce(call, "call_gram.lark")
-    print(tree.pretty())
-
-    for call_tree in tree.children:
-        # print(call_tree.pretty())
-        name = call_tree.children[0].children[0].value
-        # print(*call_tree.children, sep='\n')
-        args = list(map(lambda a: int(a.value), call_tree.children[1:]))
-        print(get_func(name)(*args))
-    print('===================')
 
 
 

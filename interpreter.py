@@ -1,4 +1,4 @@
-import main
+import GRFCore
 import sys
 # ------------- Тестироване грамматики -------------
 # path_to_tests = 'examples'
@@ -33,17 +33,24 @@ if len(code) != 2:
 
 definition, call = code[0], code[1]
 
-tree = main.my_parce(definition, "def_gram.lark")
+GRFCore.parse_def(definition)
+called_func = GRFCore.parse_call(call)
+for func, args in called_func:
+    print(func(*args))
 
-for def_tree in tree.children:
-    name = def_tree.children[0].children[0].value
-    func = main.gen_func(def_tree.children[1])
-    func.name = name
-    main.Defined.func[name] = func
+# tree = GRFCore.my_parce(definition, "def_gram.lark")
+#
+# for def_tree in tree.children:
+#     name = def_tree.children[0].children[0].value
+#     func = GRFCore.gen_func(def_tree.children[1])
+#     func.name = name
+#     GRFCore.Defined.func[name] = func
 
-tree = main.my_parce(call, "call_gram.lark")
+# tree = GRFCore.my_parce(call, "call_gram.lark")
+#
+# for call_tree in tree.children:
+#     name = call_tree.children[0].children[0].value
+#     args = list(map(lambda a: int(a.value), call_tree.children[1:]))
+#     print(GRFCore.get_func(name)(*args))
 
-for call_tree in tree.children:
-    name = call_tree.children[0].children[0].value
-    args = list(map(lambda a: int(a.value), call_tree.children[1:]))
-    print(main.get_func(name)(*args))
+
