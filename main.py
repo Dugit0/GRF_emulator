@@ -32,6 +32,9 @@ class DefError(Exception):
         return f"name '{self.name}' is not defined"
 
 # -------------- Functions --------------
+class Defined:
+    func = {}
+
 class Func:
     def __init__(self, n=1, name='Unnamed'):
         self.n = n
@@ -112,17 +115,14 @@ def minimisation():
 
 def get_func(func_name):
     global definition_dict
-    if func_name not in definition_dict.keys():
+    if func_name not in Defined.func.keys():
         raise DefError(func_name)
     # Возможна лажа с тем, что это ссылка на экземпляр!!!
     # Протестировать!!!
-    return definition_dict[func_name]
+    return Defined.func[func_name]
 
 
 def gen_func(tree):
-    # print(tree.pretty())
-    # print(f"{tree.data = }")
-    # print(f"name of tree = {tree.children[0].value}")
     mod = tree.data
     if mod == 'name':
         if tree.children[0].value == 'o':
@@ -143,7 +143,7 @@ def gen_func(tree):
         return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
     else:
         print("Unexpected node in AST", file=sys.stderr)
-        # print(tree)
+        print(tree, file=sys.stderr)
         sys.exit(1)
 
 
@@ -166,7 +166,10 @@ def gen_func(tree):
 
 
 
-test = """
+
+if __name__ == "__main__":
+
+    test = """
 # a = o
 # a = s
 # a = I^1_1
@@ -179,58 +182,47 @@ Sum = I^1_1 <- s | I^3_3 |
 Mul = o <- Sum | I^3_1 I^3_3 |
 # Pow = s | o | <- Mul | I^3_1 I^3_3 |
 !!!
-Pow(2, 5)
-"""
+Sum(10, 10)
+Mul(9, 9)
+Sum(100, 0, 123)
+Mul(7, 9)
+    """
 
-test = test.split('!!!')
-if len(test) != 2:
-    print("'!!!' is reserved", file=sys.stderr)
-    sys.exit(1)
+    test = test.split('!!!')
+    if len(test) != 2:
+        print("'!!!' is reserved", file=sys.stderr)
+        sys.exit(1)
 
-definition, call = test[0], test[1]
-print(definition)
+    definition, call = test[0], test[1]
+    print(definition)
 
-tree = my_parce(definition, "def_gram.lark")
-print(tree.pretty())
-print('===================')
+    tree = my_parce(definition, "def_gram.lark")
+    print(tree.pretty())
+    print('===================')
 
-
-definition_dict = {}
-for def_tree in tree.children:
-    # print(def_tree.pretty())
-    name = def_tree.children[0].children[0].value
-    func = gen_func(def_tree.children[1])
-    func.name = name
-    definition_dict[name] = func
-    print(func, repr(func))
-    print('----')
-
-
-mull = get_func('Mul')
-print(mull(7, 9))
+    for def_tree in tree.children:
+        # print(def_tree.pretty())
+        name = def_tree.children[0].children[0].value
+        func = gen_func(def_tree.children[1])
+        func.name = name
+        Defined.func[name] = func
+        print(func, repr(func))
+        print('----')
 
 
+    print('================================')
+    print(call)
 
+    tree = my_parce(call, "call_gram.lark")
+    print(tree.pretty())
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    for call_tree in tree.children:
+        # print(call_tree.pretty())
+        name = call_tree.children[0].children[0].value
+        # print(*call_tree.children, sep='\n')
+        args = list(map(lambda a: int(a.value), call_tree.children[1:]))
+        print(get_func(name)(*args))
+    print('===================')
 
 
 

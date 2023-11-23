@@ -2,7 +2,7 @@ start: [call]*
 ?func: name
     | i
     | const
-call: "!" func "(" [INT ("," INT)*]  ")"
+call: func "(" [INT ("," INT)*]  ")"
 name: CNAME
 i: "I" "^" INT "_" INT
 const: INT "^" INT
