@@ -35,6 +35,7 @@ definition, call = code[0], code[1]
 
 GRFCore.parse_def(definition)
 called_func = GRFCore.parse_call(call)
+print('############ RESULT ############')
 for func, args in called_func:
     print(func(*args))
 

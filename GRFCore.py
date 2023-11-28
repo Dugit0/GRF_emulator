@@ -108,9 +108,21 @@ def recursion(base, func):
     res.call_func = new_func
     return res
 
-def minimisation():
-    # TODO: write this!!!
-    pass
+def minimisation(func, ind):
+    # Test it!
+    if ind > func.n:
+        raise ArgsError(f"<= {func.n}", ind)
+    def new_func(*args):
+        y = 0
+        while True:
+            new_args = list(args[:ind - 1]) + [y] + list(args[ind - 1:-1])
+            ans = args[-1]
+            if func(*new_args) == ans:
+                return y
+            y += 1
+    res = Func(func.n)
+    res.call_func = new_func
+    return res
 
 
 def get_func(func_name):
@@ -141,7 +153,11 @@ def gen_func(tree):
     elif mod == 'rec':
         return recursion(*list(map(lambda a: gen_func(a), tree.children)))
     elif mod == 'min':
-        return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
+        # if len(tree.children) != 2:
+        #     raise 
+        # print(tree)
+        return minimisation(*[gen_func(tree.children[0]), int(tree.children[1].value), *tree.children[2:]])
+        # return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
     else:
         print("Unexpected node in AST", file=sys.stderr)
         print(tree, file=sys.stderr)
@@ -233,17 +249,25 @@ if __name__ == "__main__":
 # Sum(100, 0, 123)
 # Mul(7, 9)
 #     """
-    test = """
-Sum = I^1_1 <- s | I^3_3 |
-Mul = o <- Sum | I^3_1 I^3_3 |
-Pow = s | o | <- Mul | I^3_1 I^3_3 |
 
+#     test = """
+# Sum = I^1_1 <- s | I^3_3 |
+# Mul = o <- Sum | I^3_1 I^3_3 |
+# Pow = s | o | <- Mul | I^3_1 I^3_3 |
+#
+# !!!
+# o(12313)
+# s(123)
+# I^5_2(1, 2, 3, 4, 5)
+# 1231^2(123, 323)
+# Pow(2, 5)
+#     """
+    test = """
+F = s | I^2_1 |
+G = F ? 1
 !!!
-o(12313)
-s(123)
-I^5_2(1, 2, 3, 4, 5)
-1231^2(123, 323)
-Pow(2, 5)
+F(3, 6)
+G(3, 6)
     """
 
     test = test.split('!!!')
@@ -258,6 +282,7 @@ Pow(2, 5)
     
     print(call)
     called_func = parse_call(call)
+    print('============ RESULT ============')
     for func, args in called_func:
         print(func(*args))
 
