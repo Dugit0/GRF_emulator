@@ -2,7 +2,9 @@ from lark import Lark
 import os
 import sys
 from tqdm import tqdm
+import logging
 
+logging.basicConfig(level=logging.WARNING, filename='log.log', filemode='w')
 
 # -------------- Parcer functions --------------
 def get_parser(gramm_name):
@@ -84,7 +86,8 @@ def composition(func, *fargs):
     n = fargs[0].n
     for farg in fargs:
         if farg.n != n:
-            print(f"In function {farg.name}", file=sys.stderr)
+            # print(f"In function {farg.name}", file=sys.stderr)
+            logging.error(f"In function {farg.name}")
             raise ArgsError(n, farg.n)
     def new_func(*args):
         return func(*[farg(*args) for farg in fargs])
@@ -159,30 +162,34 @@ def gen_func(tree):
         return minimisation(*[gen_func(tree.children[0]), int(tree.children[1].value), *tree.children[2:]])
         # return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
     else:
-        print("Unexpected node in AST", file=sys.stderr)
-        print(tree, file=sys.stderr)
+        # print("Unexpected node in AST", file=sys.stderr)
+        # print(tree, file=sys.stderr)
+        logging.error(f"Unexpected node in AST\n{tree}")
         sys.exit(1)
 
 
 def parse_def(definition):
     tree = my_parce(definition, "def_gram.lark")
-    print(tree.pretty())
-    print('===================')
+    # print(tree.pretty())
+    # print('===================')
+    logging.info(tree.pretty())
     for def_tree in tree.children:
         # print(def_tree.pretty())
         name = def_tree.children[0].children[0].value
         func = gen_func(def_tree.children[1])
         func.name = name
         Defined.func[name] = func
-        print(func, repr(func))
-        print('----')
+        # print(func, repr(func))
+        # print('----')
+        logging.info(f"{func} {repr(func)}")
 
 
 def parse_call(call):
     ans = []
     tree = my_parce(call, "call_gram.lark")
-    print(tree.pretty())
-    print('===================')
+    # print(tree.pretty())
+    # print('===================')
+    logging.info(tree.pretty())
     for call_tree in tree.children:
         call_body = call_tree.children[0]
         # print(call_tree.pretty())
@@ -200,8 +207,9 @@ def parse_call(call):
         elif mod == 'const':
             func = func_const(*list(map(lambda a: int(a.value), call_body.children)))
         else:
-            print("Unexpected node in AST", file=sys.stderr)
-            print(tree, file=sys.stderr)
+            # print("Unexpected node in AST", file=sys.stderr)
+            # print(tree, file=sys.stderr)
+            logging.error(f"Unexpected node in AST\n{tree}")
             sys.exit(1)
         args = tuple(map(lambda a: int(a.value), call_tree.children[1:]))
         ans.append((func, args))
@@ -263,11 +271,23 @@ if __name__ == "__main__":
 # Pow(2, 5)
 #     """
     test = """
-F = s | I^2_1 |
-G = F ? 1
+
+        Sum = I^1_1 <- s | I^3_3 |
+        ElDiff = 0^0 <- I^2_1
+        Diff = I^1_1 <- ElDiff | I^3_3 |
+        AbsDiff = Sum | 
+                      Diff |
+                              I^2_1
+                              I^2_2
+                           |
+                      Diff |
+                              I^2_2
+                              I^2_1
+                           |
+                      |
 !!!
-F(3, 6)
-G(3, 6)
+AbsDiff(4, 9)
+AbsDiff(9, 4)
     """
 
     test = test.split('!!!')
