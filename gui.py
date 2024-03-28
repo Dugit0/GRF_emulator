@@ -318,9 +318,12 @@ class MainWindow(QMainWindow):
             self.file_save()
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
-        GRFCore.parse_def(definition)
-        called_func = GRFCore.parse_call(call)
-        ans = [str(func(*args)) for func, args in called_func]
+        try:
+            GRFCore.parse_def(definition)
+            called_func = GRFCore.parse_call(call)
+            ans = [str(func(*args)) for func, args in called_func]
+        except Exception as e:
+            ans = [str(e)]
         self.run_result.setPlainText("\n".join(ans))
 
 
