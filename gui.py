@@ -26,7 +26,6 @@ class MainWindow(QMainWindow):
         
         # self.path holds the path of the currently open file.
         # If none, we haven't got a file open yet (or creating new).
-        print(args)
         self.path = None
         
         self.defcall_splitter = "!!!"

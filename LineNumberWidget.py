@@ -1,4 +1,7 @@
 """
+Based on
+
+
 MIT License
 
 Copyright (c) 2021 Jung Gyu Yoon
@@ -31,65 +34,61 @@ from PyQt5.QtCore import Qt
 class LineNumberWidget(QTextBrowser):
     def __init__(self, widget):
         super().__init__()
-        self.__initUi(widget)
+        self.initUi(widget)
 
-    def __initUi(self, widget):
-        self.__lineCount = widget.document().lineCount()
-        self.__size = int(widget.font().pointSizeF())
-        self.__styleInit()
+    def initUi(self, widget):
+        self.lineCount = widget.document().lineCount()
+        self.externFont = widget.font()
+        self.initStyleSheet()
+        self.setExternFont()
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setTextInteractionFlags(Qt.NoTextInteraction)
 
         self.verticalScrollBar().setEnabled(False)
 
-        widget.verticalScrollBar().valueChanged.connect(self.__changeLineWidgetScrollAsTargetedWidgetScrollChanged)
+        widget.verticalScrollBar().valueChanged.connect(self.changeSelfScroll)
 
-        self.__initLineCount()
+        self.initLineCount()
 
-    def __changeLineWidgetScrollAsTargetedWidgetScrollChanged(self, v):
+    def changeSelfScroll(self, v):
+        # Change LineWidget scroll as targeted widget scroll changed
         self.verticalScrollBar().setValue(v)
 
-    def __initLineCount(self):
-        for n in range(1, self.__lineCount+1):
+    def initLineCount(self):
+        for n in range(1, self.lineCount + 1):
             self.append(str(n))
 
     def changeLineCount(self, n):
-        max_one = max(self.__lineCount, n)
-        diff = n-self.__lineCount
-        if max_one == self.__lineCount:
+        max_one = max(self.lineCount, n)
+        diff = n - self.lineCount
+        if max_one == self.lineCount:
             first_v = self.verticalScrollBar().value()
-            for i in range(self.__lineCount, self.__lineCount + diff, -1):
+            for i in range(self.lineCount, self.lineCount + diff, -1):
                 self.moveCursor(QTextCursor.End, QTextCursor.MoveAnchor)
                 self.moveCursor(QTextCursor.StartOfLine, QTextCursor.MoveAnchor)
                 self.moveCursor(QTextCursor.End, QTextCursor.KeepAnchor)
                 self.textCursor().removeSelectedText()
                 self.textCursor().deletePreviousChar()
             last_v = self.verticalScrollBar().value()
-            if abs(first_v-last_v) != 2:
+            if abs(first_v - last_v) != 2:
                 self.verticalScrollBar().setValue(first_v)
         else:
-            for i in range(self.__lineCount, self.__lineCount + diff, 1):
+            for i in range(self.lineCount, self.lineCount + diff, 1):
                 self.append(str(i + 1))
+        self.lineCount = n
 
-        self.__lineCount = n
-
-    def setValue(self, v):
-        self.verticalScrollBar().setValue(v)
-
-    def setFontSize(self, s: float):
-        self.__size = int(s)
-        self.__styleInit()
-
-    def __styleInit(self):
-        self.__style = f'''
+    def initStyleSheet(self):
+        styleSheet = f'''
                        QTextBrowser 
                        {{ 
                        background: transparent; 
                        border: none; 
                        color: #AAA; 
-                       font: {self.__size}pt;
                        }}
                        '''
-        self.setStyleSheet(self.__style)
-        self.setFixedWidth(self.__size*5)
+        self.setStyleSheet(styleSheet)
+        self.setFixedWidth(self.externFont.pointSize() * 4)
+
+    def setExternFont(self):
+        self.setFont(self.externFont)
