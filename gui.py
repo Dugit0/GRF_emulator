@@ -24,11 +24,12 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         
+        self.defcall_split_str = "!!!"
+        
         # self.path holds the path of the currently open file.
         # If none, we haven't got a file open yet (or creating new).
         self.path = None
-        
-        self.defcall_splitter = "!!!"
+        self.saved_text = self.defcall_split_str
 
         self.setGeometry(100, 100, 1000, 700)   # setting window geometry
         
@@ -78,6 +79,10 @@ class MainWindow(QMainWindow):
         # Status bar
         self.status = QStatusBar()         # creating a status bar object
         self.setStatusBar(self.status)     # setting stats bar to the window
+
+        # Update statusbar when file is changed
+        self.editor.textChanged.connect(self.update_statusbar)
+        self.call_editor.textChanged.connect(self.update_statusbar)
         
         
         # ====== Menu bar ======
@@ -187,7 +192,8 @@ class MainWindow(QMainWindow):
         run_toolbar.addAction(run_action)
         
 
-        self.update_title()             # calling update title method
+        self.setWindowTitle("GRF emulator")
+        self.update_statusbar()             # calling update title method
         self.show()                     # showing all the components
 
     
@@ -199,11 +205,32 @@ class MainWindow(QMainWindow):
         dlg.setIcon(QMessageBox.Critical)  # setting icon to it
         dlg.show()                         # showing it
 
+
     def line_widget_line_count_changed(self):
+        # Signal for line widget
         if self.line_widget:
             n = int(self.editor.document().lineCount())
             self.line_widget.changeLineCount(n)
 
+    
+    def get_all_file_text(self):
+        definition = self.editor.toPlainText()
+        call = self.call_editor.toPlainText()
+        text = definition + self.defcall_split_str + call
+        return text
+
+    
+    def get_definition_text(self):
+        return self.editor.toPlainText()
+
+    
+    def get_call_text(self):
+        return self.call_editor.toPlainText()
+
+
+    def is_saved(self):
+        cur_text = self.get_all_file_text()
+        return cur_text == self.saved_text
 
     
     def file_open(self):
@@ -216,11 +243,12 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 self.dialog_critical(str(e))
             else:
-                definition, _, call = text.partition(self.defcall_splitter)
+                definition, _, call = text.partition(self.defcall_split_str)
                 self.path = path
                 self.editor.setPlainText(definition)
                 self.call_editor.setPlainText(call)
-                self.update_title()
+                self.saved_text = self.get_all_file_text()
+                self.update_statusbar()
 
     
     def file_save(self):
@@ -242,7 +270,7 @@ class MainWindow(QMainWindow):
     def _save_to_path(self, path):
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
-        text = definition + self.defcall_splitter + call
+        text = definition + self.defcall_split_str + call
         try:
             with open(path, 'w') as f:
                 f.write(text)
@@ -250,14 +278,16 @@ class MainWindow(QMainWindow):
             self.dialog_critical(str(e))
         else:
             self.path = path
-            self.update_title()
+            self.saved_text = self.get_all_file_text()
+            self.update_statusbar()
 
     
-    def update_title(self):
+    def update_statusbar(self):
         # setting window title with prefix as file name
         # suffix as PyQt5 Notepad
-        filename = os.path.basename(self.path) if self.path else "Untitled"
-        self.setWindowTitle(f"{filename} - GRF emulator")
+        filename = self.path if self.path else "Untitled"
+        is_saved_marker = "*" if not self.is_saved() else ""
+        self.status.showMessage(f"File: {filename}{is_saved_marker}")
 
     
     # action called by edit toggle
