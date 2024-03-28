@@ -196,6 +196,10 @@ class MainWindow(QMainWindow):
         self.update_statusbar()             # calling update title method
         self.show()                     # showing all the components
 
+    def closeEvent(self, event):
+        if not self.is_saved():
+            self.unsaved_file_dialog()
+
     
     # creating dialog critical method
     # to show errors
@@ -205,7 +209,18 @@ class MainWindow(QMainWindow):
         dlg.setIcon(QMessageBox.Critical)  # setting icon to it
         dlg.show()                         # showing it
 
+    
+    def unsaved_file_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("File is unsaved")
+        dlg.setText("Do you want to save changes?")
+        dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        dlg.setIcon(QMessageBox.Question)
+        button = dlg.exec()
+        if button == QMessageBox.Yes:
+            self.file_save()
 
+    
     def line_widget_line_count_changed(self):
         # Signal for line widget
         if self.line_widget:
@@ -234,6 +249,8 @@ class MainWindow(QMainWindow):
 
     
     def file_open(self):
+        if not self.is_saved():
+            self.unsaved_file_dialog()
         path, _ = QFileDialog.getOpenFileName(self, "Open file", "", 
                             "All files (*.*)")
         if path:
@@ -253,7 +270,8 @@ class MainWindow(QMainWindow):
     
     def file_save(self):
         if self.path is None:
-            return self.file_saveas()
+            self.file_saveas()
+            return
         self._save_to_path(self.path)
 
     
