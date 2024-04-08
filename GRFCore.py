@@ -38,51 +38,98 @@ class Defined:
     func = {}
 
 class Func:
-    def __init__(self, n=1, name='Unnamed', code=''):
+    def __init__(self, n=1, name='Unnamed'):
         self.n = n
         self.name = name
-        self.code = code
+        self.call_func = lambda : None
     def __str__(self):
         return self.name
     def __call__(self, *args):
         if len(args) != self.n:
             raise ArgsError(self.n, len(args))
-        local_vars = {'res': None}
-        exec(self.code, {}, local_vars)
-        return local_vars['res']
+        return self.call_func(*args)
 
 
 def func_o():
-    return Func(1, 'o', 'res = 0')
+    res = Func(1, 'o')
+    def new_func(*args):
+        return 0
+    res.call_func = new_func
+    return res
 
 
 def func_s():
-    return Func(1, 's', 'res = {x1} + 1')
+    res = Func(1, 's')
+    def new_func(*args):
+        return args[0] + 1
+    res.call_func = new_func
+    return res
 
 
 def func_i(n, m):
-    func = Func(n, f'i^{n}_{m}')
-    x = f"x{m}"
-    func.code = "res = {" + x + "}"
-    return func
+    res = Func(n, f'i^{n}_{m}')
+    def new_func(*args):
+        return args[m - 1]
+    res.call_func = new_func
+    return res
 
 
 def func_const(const, n):
-    return Func(n, f'{const}^{n}', f'res = {const}')
+    res = Func(n, f'{const}^{n}')
+    def new_func(*args):
+        return const
+    res.call_func = new_func
+    return res
 
 
 def composition(func, *fargs):
-    pass
+    n = fargs[0].n
+    for farg in fargs:
+        if farg.n != n:
+            # print(f"In function {farg.name}", file=sys.stderr)
+            logging.error(f"In function {farg.name}")
+            raise ArgsError(n, farg.n)
+    def new_func(*args):
+        return func(*[farg(*args) for farg in fargs])
+    res = Func(n)
+    res.call_func = new_func
+    return res
 
 
 def recursion(base, func):
-    pass
+    if base.n + 2 != func.n:
+        raise ArgsError(base.n + 2, func.n)
+    def new_func(*args):
+        base_args = args[:-1] 
+        result = base(*base_args)
+        for i in range(1, args[-1] + 1):
+            # print([*base_args, i, result])
+            result = func(*[*base_args, i - 1, result])
+            # print(result)
+        return result
+    res = Func(base.n + 1)
+    res.call_func = new_func
+    return res
 
 def minimisation(func, ind):
-    pass
+    # Test it!
+    if ind > func.n:
+        raise ArgsError(f"<= {func.n}", ind)
+    def new_func(*args):
+        y = 0
+        while True:
+            new_args = list(args[:ind - 1]) + [y] + list(args[ind - 1:-1])
+            ans = args[-1]
+            if func(*new_args) == ans:
+                return y
+            y += 1
+    res = Func(func.n)
+    res.call_func = new_func
+    return res
 
 
 def get_func(func_name):
+    global definition_dict
     if func_name not in Defined.func.keys():
         raise DefError(func_name)
     # Возможна лажа с тем, что это ссылка на экземпляр!!!
@@ -192,57 +239,23 @@ def parse_call(call):
 
 
 if __name__ == "__main__":
-
-#     test = """
-# # a = o
-# # a = s
-# # a = I^1_1
-# # a = myfunc
-# # a = 12^12
-# # a = o | s |
-# # a = o <- I^3_1
-# # a = o ? 12
-# Sum = I^1_1 <- s | I^3_3 |
-# Mul = o <- Sum | I^3_1 I^3_3 |
-# # Pow = s | o | <- Mul | I^3_1 I^3_3 |
-# !!!
-# Sum(10, 10)
-# Mul(9, 9)
-# Sum(100, 0, 123)
-# Mul(7, 9)
-#     """
-
-#     test = """
-# Sum = I^1_1 <- s | I^3_3 |
-# Mul = o <- Sum | I^3_1 I^3_3 |
-# Pow = s | o | <- Mul | I^3_1 I^3_3 |
-#
-# !!!
-# o(12313)
-# s(123)
-# I^5_2(1, 2, 3, 4, 5)
-# 1231^2(123, 323)
-# Pow(2, 5)
-#     """
     test = """
-
-        Sum = I^1_1 <- s | I^3_3 |
-        ElDiff = 0^0 <- I^2_1
-        Diff = I^1_1 <- ElDiff | I^3_3 |
-        AbsDiff = Sum | 
-                      Diff |
-                              I^2_1
-                              I^2_2
-                           |
-                      Diff |
-                              I^2_2
-                              I^2_1
-                           |
-                      |
-!!!
-AbsDiff(4, 9)
-AbsDiff(9, 4)
-    """
+    Sum = I^1_1 <- s { I^3_3 }
+    ElDiff = 0^0 <- I^2_1
+    Diff = I^1_1 <- ElDiff { I^3_3 }
+    AbsDiff = Sum { 
+                  Diff {
+                          I^2_1
+                          I^2_2
+                       }
+                  Diff {
+                          I^2_2
+                          I^2_1
+                       }
+                  }
+    !!!
+ElDiff(4)
+    """.strip()
 
     test = test.split('!!!')
     if len(test) != 2:
