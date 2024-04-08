@@ -38,32 +38,37 @@ class Defined:
     func = {}
 
 class Func:
-    def __init__(self, n=1, name='Unnamed'):
+    def __init__(self, n=1, name='Unnamed', code=''):
         self.n = n
         self.name = name
-        # self.call_func = lambda : None
+        self.code = code
     def __str__(self):
         return self.name
     def __call__(self, *args):
         if len(args) != self.n:
             raise ArgsError(self.n, len(args))
-        # return self.call_func(*args)
+        local_vars = {'res': None}
+        exec(self.code, {}, local_vars)
+        return local_vars['res']
 
 
 def func_o():
-    pass
+    return Func(1, 'o', 'res = 0')
 
 
 def func_s():
-    pass
+    return Func(1, 's', 'res = {x1} + 1')
 
 
 def func_i(n, m):
-    pass
+    func = Func(n, f'i^{n}_{m}')
+    x = f"x{m}"
+    func.code = "res = {" + x + "}"
+    return func
 
 
 def func_const(const, n):
-    pass
+    return Func(n, f'{const}^{n}', f'res = {const}')
 
 
 def composition(func, *fargs):
