@@ -41,95 +41,43 @@ class Func:
     def __init__(self, n=1, name='Unnamed'):
         self.n = n
         self.name = name
-        self.call_func = lambda : None
+        # self.call_func = lambda : None
     def __str__(self):
         return self.name
     def __call__(self, *args):
         if len(args) != self.n:
             raise ArgsError(self.n, len(args))
-        return self.call_func(*args)
+        # return self.call_func(*args)
 
 
 def func_o():
-    res = Func(1, 'o')
-    def new_func(*args):
-        return 0
-    res.call_func = new_func
-    return res
+    pass
 
 
 def func_s():
-    res = Func(1, 's')
-    def new_func(*args):
-        return args[0] + 1
-    res.call_func = new_func
-    return res
+    pass
 
 
 def func_i(n, m):
-    res = Func(n, f'i^{n}_{m}')
-    def new_func(*args):
-        return args[m - 1]
-    res.call_func = new_func
-    return res
+    pass
 
 
 def func_const(const, n):
-    res = Func(n, f'{const}^{n}')
-    def new_func(*args):
-        return const
-    res.call_func = new_func
-    return res
+    pass
 
 
 def composition(func, *fargs):
-    n = fargs[0].n
-    for farg in fargs:
-        if farg.n != n:
-            # print(f"In function {farg.name}", file=sys.stderr)
-            logging.error(f"In function {farg.name}")
-            raise ArgsError(n, farg.n)
-    def new_func(*args):
-        return func(*[farg(*args) for farg in fargs])
-    res = Func(n)
-    res.call_func = new_func
-    return res
+    pass
 
 
 def recursion(base, func):
-    if base.n + 2 != func.n:
-        raise ArgsError(base.n + 2, func.n)
-    def new_func(*args):
-        if args[-1] == 0:
-            # return base(*(args[:-1]))
-            return base(*args[:-1])
-        new_args = list(args[:])
-        new_args[-1] = new_args[-1] - 1
-        new_args.append(new_func(*new_args))
-        return func(*new_args)
-    res = Func(base.n + 1)
-    res.call_func = new_func
-    return res
+    pass
 
 def minimisation(func, ind):
-    # Test it!
-    if ind > func.n:
-        raise ArgsError(f"<= {func.n}", ind)
-    def new_func(*args):
-        y = 0
-        while True:
-            new_args = list(args[:ind - 1]) + [y] + list(args[ind - 1:-1])
-            ans = args[-1]
-            if func(*new_args) == ans:
-                return y
-            y += 1
-    res = Func(func.n)
-    res.call_func = new_func
-    return res
+    pass
 
 
 def get_func(func_name):
-    global definition_dict
     if func_name not in Defined.func.keys():
         raise DefError(func_name)
     # Возможна лажа с тем, что это ссылка на экземпляр!!!
@@ -169,6 +117,7 @@ def gen_func(tree):
 
 
 def parse_def(definition):
+    definition = " ".join(definition.split())
     tree = my_parce(definition, "def_gram.lark")
     # print(tree.pretty())
     # print('===================')
