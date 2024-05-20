@@ -241,6 +241,7 @@ def parse_call(call):
 if __name__ == "__main__":
     test = """
     Sum = I^1_1 <- s { I^3_3 }
+    Mul = o <- Sum { I^3_1 I^3_3 }
     ElDiff = 0^0 <- I^2_1
     Diff = I^1_1 <- ElDiff { I^3_3 }
     AbsDiff = Sum { 
@@ -254,7 +255,7 @@ if __name__ == "__main__":
                        }
                   }
     !!!
-ElDiff(4)
+Mul(102300, 100)
     """.strip()
 
     test = test.split('!!!')
@@ -270,8 +271,11 @@ ElDiff(4)
     print(call)
     called_func = parse_call(call)
     print('============ RESULT ============')
+    import time
     for func, args in called_func:
+        start = time.time()
         print(func(*args))
+        print(time.time() - start)
 
 
 
