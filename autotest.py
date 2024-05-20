@@ -1,5 +1,5 @@
 import unittest
-import GRFCore
+from grfemulator import core
 
 
 class TestSg(unittest.TestCase):
@@ -8,13 +8,13 @@ class TestSg(unittest.TestCase):
         definition = """
         Sg = 0^0 <- s { 0^2 }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(20):
             call = f"""
             Sg({i})
             """
-            called_func = GRFCore.parse_call(call)
+            called_func = core.parse_call(call)
             for func, args in called_func:
                 self.assertEqual(func(*args), 0 if i == 0 else 1)
 
@@ -25,13 +25,13 @@ class TestNsg(unittest.TestCase):
         definition = """
         Nsg = s { 0^0 } <- 0^2 
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             call = f"""
             Nsg({i})
             """
-            called_func = GRFCore.parse_call(call)
+            called_func = core.parse_call(call)
             for func, args in called_func:
                 self.assertEqual(func(*args), 1 if i == 0 else 0)
 
@@ -42,13 +42,13 @@ class TestAdd(unittest.TestCase):
         definition = """
         Sum = I^1_1 <- s { I^3_3 }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
 
     # def test_small_int_1(self):
     #     call = """
     #     Sum(1, 3)
     #     """.strip()
-    #     called_func = GRFCore.parse_call(call)
+    #     called_func = core.parse_call(call)
     #     for func, args in called_func:
     #         self.assertEqual(func(*args), 4)
 
@@ -58,7 +58,7 @@ class TestAdd(unittest.TestCase):
                 call = f"""
                 Sum({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), i + j)
 
@@ -70,14 +70,14 @@ class TestMul(unittest.TestCase):
         Sum = I^1_1 <- s { I^3_3 }
         Mul = o <- Sum { I^3_1 I^3_3 }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             for j in range(10):
                 call = f"""
                 Mul({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), i * j)
 
@@ -89,14 +89,14 @@ class TestDiff(unittest.TestCase):
         ElDiff = 0^0 <- I^2_1
         Diff = I^1_1 <- ElDiff { I^3_3 }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             for j in range(10):
                 call = f"""
                 Diff({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), 0 if i < j else i - j)
 
@@ -119,14 +119,14 @@ class TestAbsDiff_1(unittest.TestCase):
                            }
                       }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             for j in range(10):
                 call = f"""
                 AbsDiff({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), abs(i - j))
 
@@ -140,14 +140,14 @@ class TestAbsDiff_2(unittest.TestCase):
         Diff = I^1_1 <- ElDiff { I^3_3 }
         AbsDiff = Sum { Diff Diff { I^2_2 I^2_1 } }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             for j in range(10):
                 call = f"""
                 AbsDiff({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), abs(i - j))
 
@@ -161,14 +161,14 @@ class TestAbsDiff_3(unittest.TestCase):
         Diff = I^1_1 <- ElDiff { I^3_3 }
         AbsDiff = Sum { Diff { I^2_1 I^2_2 } Diff { I^2_2 I^2_1 } }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             for j in range(10):
                 call = f"""
                 AbsDiff({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), abs(i - j))
 
@@ -186,14 +186,14 @@ class TestDiv(unittest.TestCase):
         F = 0^2 <- G
         Div = F { I^2_1 I^2_2 I^2_1 }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             for j in range(10):
                 call = f"""
                 Div({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), i if j == 0 else i // j)
 
@@ -212,14 +212,14 @@ class TestRest(unittest.TestCase):
         Div = F { I^2_1 I^2_2 I^2_1 }
         Rest = Diff { I^2_1 Mul { I^2_2 Div } }
         """.strip()
-        GRFCore.parse_def(definition)
+        core.parse_def(definition)
     def test_small_brute_force(self):
         for i in range(10):
             for j in range(10):
                 call = f"""
                 Rest({i}, {j})
                 """.strip()
-                called_func = GRFCore.parse_call(call)
+                called_func = core.parse_call(call)
                 for func, args in called_func:
                     self.assertEqual(func(*args), i if j == 0 else i % j)
 

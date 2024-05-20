@@ -1,4 +1,6 @@
 from lark import Lark
+import importlib.resources
+from . import grammars
 import os
 import sys
 from tqdm import tqdm
@@ -8,7 +10,7 @@ logging.basicConfig(level=logging.WARNING, filename='log.log', filemode='w')
 
 # -------------- Parcer functions --------------
 def get_parser(gramm_name):
-    with open(gramm_name) as file_gramm:
+    with importlib.resources.files(grammars).joinpath(gramm_name).open() as file_gramm:
         grammar = file_gramm.read()
     return Lark(grammar, start="start")
 
@@ -170,7 +172,7 @@ def gen_func(tree):
 
 def parse_def(definition):
     definition = " ".join(definition.split())
-    tree = my_parce(definition, "def_gram.lark")
+    tree = my_parce(definition, "def_grammar.lark")
     # print(tree.pretty())
     # print('===================')
     logging.info(tree.pretty())
@@ -187,7 +189,7 @@ def parse_def(definition):
 
 def parse_call(call):
     ans = []
-    tree = my_parce(call, "call_gram.lark")
+    tree = my_parce(call, "call_grammar.lark")
     # print(tree.pretty())
     # print('===================')
     logging.info(tree.pretty())

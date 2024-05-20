@@ -1,6 +1,9 @@
 # My settings
 *.tmp
 *.log
+inp
+out
+meow
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

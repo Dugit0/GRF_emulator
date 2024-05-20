@@ -2,8 +2,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtPrintSupport import *
-from LineNumberWidget import LineNumberWidget
-import GRFCore
+from .LineNumberWidget import LineNumberWidget
+from .. import core
 import os
 import sys
 
@@ -319,19 +319,16 @@ class MainWindow(QMainWindow):
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
         try:
-            GRFCore.parse_def(definition)
-            called_func = GRFCore.parse_call(call)
+            core.parse_def(definition)
+            called_func = core.parse_call(call)
             ans = [str(func(*args)) for func, args in called_func]
         except Exception as e:
             ans = [str(e)]
         self.run_result.setPlainText("\n".join(ans))
 
 
-
-
-if __name__ == '__main__':
+def run_gui():
     app = QApplication(sys.argv)            # creating PyQt5 application
     app.setApplicationName("GRF emulator")  # setting application name
     window = MainWindow()                   # creating a main window object
     sys.exit(app.exec_())                   # loop
-

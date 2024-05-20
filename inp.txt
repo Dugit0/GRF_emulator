@@ -9,4 +9,4 @@ Div = F { I^2_1 I^2_2 I^2_1 }
 Rest = Diff { I^2_1 Mul { I^2_2 Div } }
 !!!Rest(10, 4)
 Rest(15, 4)
-Rest(20, 4)
+Rest(21, 4)
