@@ -10,18 +10,27 @@ logging.basicConfig(level=logging.WARNING, filename='log.log', filemode='w')
 
 # -------------- Parcer functions --------------
 def get_parser(gramm_name):
+    """
+    Return parser by name of the grammar.
+    """
     with importlib.resources.files(grammars).joinpath(gramm_name).open() as file_gramm:
         grammar = file_gramm.read()
     return Lark(grammar, start="start")
 
 
 def my_parce(code, gramm_name):
+    """
+    Return AST by code and name of the grammar.
+    """
     parcer = get_parser(gramm_name)
     return parcer.parse(code)
 
 
 # -------------- Custom exception --------------
 class ArgsError(Exception):
+    """
+    Exception raised when expected x arguments and received y (x != y).
+    """
     def __init__(self, expected, received):
         self.expected = expected
         self.received = received
@@ -30,15 +39,15 @@ class ArgsError(Exception):
 
 
 class DefError(Exception):
+    """
+    Exception raised when function is not defined.
+    """
     def __init__(self, name):
         self.name = name
     def __str__(self):
         return f"name '{self.name}' is not defined"
 
 # -------------- Functions --------------
-class Defined:
-    func = {}
-
 class Func:
     def __init__(self, n=1, name='Unnamed'):
         self.n = n
@@ -130,16 +139,16 @@ def minimisation(func, ind):
     return res
 
 
-def get_func(func_name):
+def get_func(func_name, func_dict):
     global definition_dict
-    if func_name not in Defined.func.keys():
+    if func_name not in func_dict.keys():
         raise DefError(func_name)
     # Возможна лажа с тем, что это ссылка на экземпляр!!!
     # Протестировать!!!
-    return Defined.func[func_name]
+    return func_dict[func_name]
 
 
-def gen_func(tree):
+def gen_func(tree, func_dict):
     mod = tree.data
     if mod == 'name':
         name_val = tree.children[0].value
@@ -148,20 +157,20 @@ def gen_func(tree):
         elif name_val == 's':
             return func_s()
         else:
-            return get_func(name_val)
+            return get_func(name_val, func_dict)
     elif mod == 'i':
         return func_i(*list(map(lambda a: int(a.value), tree.children)))
     elif mod == 'const':
         return func_const(*list(map(lambda a: int(a.value), tree.children)))
     elif mod == 'comp':
-        return composition(*list(map(lambda a: gen_func(a), tree.children)))
+        return composition(*list(map(lambda a: gen_func(a, func_dict), tree.children)))
     elif mod == 'rec':
-        return recursion(*list(map(lambda a: gen_func(a), tree.children)))
+        return recursion(*list(map(lambda a: gen_func(a, func_dict), tree.children)))
     elif mod == 'min':
         # if len(tree.children) != 2:
         #     raise 
         # print(tree)
-        return minimisation(*[gen_func(tree.children[0]), int(tree.children[1].value), *tree.children[2:]])
+        return minimisation(*[gen_func(tree.children[0], func_dict), int(tree.children[1].value), *tree.children[2:]])
         # return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
     else:
         # print("Unexpected node in AST", file=sys.stderr)
@@ -171,6 +180,7 @@ def gen_func(tree):
 
 
 def parse_def(definition):
+    func_dict = {}
     definition = " ".join(definition.split())
     tree = my_parce(definition, "def_grammar.lark")
     # print(tree.pretty())
@@ -179,15 +189,16 @@ def parse_def(definition):
     for def_tree in tree.children:
         # print(def_tree.pretty())
         name = def_tree.children[0].children[0].value
-        func = gen_func(def_tree.children[1])
+        func = gen_func(def_tree.children[1], func_dict)
         func.name = name
-        Defined.func[name] = func
+        func_dict[name] = func
         # print(func, repr(func))
         # print('----')
         logging.info(f"{func} {repr(func)}")
+    return func_dict
 
 
-def parse_call(call):
+def parse_call(call, func_dict):
     ans = []
     tree = my_parce(call, "call_grammar.lark")
     # print(tree.pretty())
@@ -204,7 +215,7 @@ def parse_call(call):
             elif name_val == 's':
                 func = func_s()
             else:
-                func = get_func(name_val)
+                func = get_func(name_val, func_dict)
         elif mod == 'i':
             func = func_i(*list(map(lambda a: int(a.value), call_body.children)))
         elif mod == 'const':

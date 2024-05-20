@@ -318,13 +318,21 @@ class MainWindow(QMainWindow):
             self.file_save()
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
+        self.run_result.setPlainText("")
         try:
-            core.parse_def(definition)
-            called_func = core.parse_call(call)
-            ans = [str(func(*args)) for func, args in called_func]
+            func_dict = core.parse_def(definition)
+            called_func = core.parse_call(call, func_dict)
         except Exception as e:
-            ans = [str(e)]
-        self.run_result.setPlainText("\n".join(ans))
+            self.run_result.setPlainText(str(e))
+            return
+        
+        for func, args in called_func:
+            try:
+                ans = str(func(*args))
+            except Exception as e:
+                self.run_result.appendPlainText(str(e))
+                return
+            self.run_result.appendPlainText(ans)
 
 
 def run_gui():
