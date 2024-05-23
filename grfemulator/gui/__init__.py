@@ -17,6 +17,30 @@ TODO:
 """
 
 
+class MarkDebugDialog(QDialog):
+    def __init__(self, parent, func_names):
+        super().__init__()
+        
+        self.setWindowTitle("Functions for debugging")
+
+        
+        self.layout = QVBoxLayout()
+        
+        message = QLabel("Mark functions for debugging")
+        self.layout.addWidget(message)
+        
+        self.checkboxes = [QCheckBox(name, self) for name in func_names]
+        for checkbox in self.checkboxes:
+            self.layout.addWidget(checkbox)
+        
+        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        self.buttonBox = QDialogButtonBox(buttons)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+
 
 class MainWindow(QMainWindow):
 
@@ -30,6 +54,7 @@ class MainWindow(QMainWindow):
         # If none, we haven't got a file open yet (or creating new).
         self.path = None
         self.saved_text = self.defcall_split_str
+        self.debug_func_names = []
 
         self.setGeometry(100, 100, 1000, 700)   # setting window geometry
         
@@ -186,6 +211,21 @@ class MainWindow(QMainWindow):
         run_action.setShortcut("F5")
         run_menu.addAction(run_action)
 
+        # === Debug menu in menu bar ===
+        debug_menu = self.menuBar().addMenu("&Debug")
+
+        mark_action = QAction("Mark", self)
+        mark_action.setStatusTip("Mark functions for debug")
+        mark_action.triggered.connect(self.mark_debug_func)
+        mark_action.setShortcut("F7")
+        debug_menu.addAction(mark_action)
+
+        debug_action = QAction("Run and debug", self)
+        debug_action.setStatusTip("Run and debug program")
+        debug_action.triggered.connect(self.debug_program)
+        debug_action.setShortcut("F8")
+        debug_menu.addAction(debug_action)
+
         # === Run toolbar ===
         run_toolbar = QToolBar("Edit")
         self.addToolBar(run_toolbar)
@@ -333,6 +373,61 @@ class MainWindow(QMainWindow):
                 self.run_result.appendPlainText(str(e))
                 return
             self.run_result.appendPlainText(ans)
+
+
+    def mark_debug_func(self):
+        # Try to parce definition
+        definition = self.editor.toPlainText()
+        try:
+            func_dict = core.parse_def(definition)
+        except Exception as e:
+            self.dialog_critical("Error in the program. Debugging is not possible.")
+            return
+        # Exec dialog for marking debug func
+        dlg = MarkDebugDialog(self, list(func_dict.keys()))
+        if dlg.exec():
+            # MarkDebugDialog return 'OK'
+            self.debug_func_names = [checkbox.text() for checkbox in dlg.checkboxes if checkbox.isChecked()]
+        else:
+            # MarkDebugDialog return 'Cancel'
+            pass
+
+
+    def debug_program(self):
+        if self.path is not None:
+            self.file_save()
+        definition = self.editor.toPlainText()
+        call = self.call_editor.toPlainText()
+        self.run_result.setPlainText("")
+        try:
+            func_dict = core.parse_def(definition)
+        except Exception as e:
+            self.run_result.setPlainText(str(e))
+            return
+
+        if not all([func_name in func_dict for func_name in self.debug_func_names]):
+            self.mark_debug_func()
+
+        for func_name in self.debug_func_names:
+            func_dict[func_name].show_call = True
+
+        try:
+            called_func = core.parse_call(call, func_dict)
+        except Exception as e:
+            self.run_result.setPlainText(str(e))
+            return
+        
+        for func, args in called_func:
+            try:
+                ans = str(func(*args))
+            except Exception as e:
+                self.run_result.appendPlainText(str(e))
+                return
+            self.run_result.appendPlainText(ans)
+            self.run_result.appendPlainText(core.GLOBAL_DEBUG_LOG)
+            core.GLOBAL_DEBUG_LOG = ""
+        # TODO
+        pass
 
 
 def run_gui():
