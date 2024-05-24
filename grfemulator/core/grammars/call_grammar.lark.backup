@@ -1,4 +1,4 @@
-start: [(call ";")*]
+start: [call]*
 ?func: name
     | i
     | const

@@ -3,12 +3,12 @@
 // 2. comp
 // 3. rec
 
-start: [def ";" (def ";")*]
+start: [def ([" "] def)*]
 def: name "=" rec_exp
 ?rec_exp: comp_exp
         | rec_exp "<-" comp_exp                    -> rec
 ?comp_exp: min_exp
-         | min_exp "{" rec_exp ("," rec_exp)* "}"  -> comp
+         | min_exp "{" rec_exp (" " rec_exp)* "}"  -> comp // TODO: Вот тут могут быть проблемы!!!
 ?min_exp: atom
         | min_exp "?" INT                          -> min
 ?atom: func

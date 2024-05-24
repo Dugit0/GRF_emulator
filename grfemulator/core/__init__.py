@@ -47,7 +47,8 @@ def get_parser(gramm_name):
     """
     with importlib.resources.files(grammars).joinpath(gramm_name).open() as file_gramm:
         grammar = file_gramm.read()
-    return Lark(grammar, start="start")
+    return Lark(grammar, start="start", parser='lalr')
+    # return Lark(grammar, start="start")
 
 
 def my_parce(code, gramm_name):
