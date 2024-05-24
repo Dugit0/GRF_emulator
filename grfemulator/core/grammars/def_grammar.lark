@@ -10,7 +10,7 @@ def: name "=" rec_exp
 ?comp_exp: min_exp
          | min_exp "{" rec_exp ("," rec_exp)* "}"  -> comp
 ?min_exp: atom
-        | min_exp "?" INT                          -> min
+        | "?" min_exp                              -> min
 ?atom: func
      | "(" rec_exp ")"
 ?func: name
