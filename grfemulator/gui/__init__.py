@@ -56,7 +56,11 @@ class MainWindow(QMainWindow):
         self.saved_text = self.defcall_split_str
         self.debug_func_names = []
 
-        self.setGeometry(100, 100, 1000, 700)   # setting window geometry
+        # TODO use Path
+        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo.png')
+        self.setWindowIcon(QIcon(logo_path))
+        self.setWindowTitle("GRF emulator")
+        self.setGeometry(100, 100, 1200, 700)   # setting window geometry
         
         layout = QHBoxLayout()   # creating a layout
 
@@ -232,7 +236,6 @@ class MainWindow(QMainWindow):
         run_toolbar.addAction(run_action)
         
 
-        self.setWindowTitle("GRF emulator")
         self.update_statusbar()             # calling update title method
         self.show()                     # showing all the components
 

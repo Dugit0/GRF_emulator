@@ -99,15 +99,25 @@ class Func:
         global GLOBAL_DEBUG_LOG
         if len(args) != self.n:
             raise ArgsError(self.n, len(args))
+        # if self.show_stack:
         if self.show_call:
             GLOBAL_DEBUG_LOG += f"{self.name}({', '.join(list(map(str, args)))})\n"
-            print(self.__repr__())
-            print(*traceback.format_stack(), sep='----------------------\n')
             return self.call_func(*args)
         else:
         #     return self.optimazed_call(*args)
             return self.call_func(*args)
 
+# ================ Move ================
+# def reqursive_mark(func, parent_prefix):
+#     func.prefix = parent_prefix + func.name
+#     if isinstance(func.call_func, Func):
+#         reqursive_mark()
+
+def mark_function(func_name, func_dict):
+    func_dict[func_dict].show_stack = True
+
+    pass
+# ================ Move ================
 
 def func_o():
     res = Func(1, 'o')
