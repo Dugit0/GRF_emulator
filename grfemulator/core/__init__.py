@@ -3,7 +3,6 @@ import importlib.resources
 from . import grammars
 import os
 import sys
-from tqdm import tqdm
 import logging
 import traceback
 
