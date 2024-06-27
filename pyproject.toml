@@ -1,0 +1,18 @@
+[project]
+name = "grfemulator"
+description = "Emulator of general recursive function"
+version = "0.0.1"
+requires-python = ">=3.10"
+dependencies = ["pyqt5", "lark"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-dir]
+tganalyzer = "grfemulator"
+
+[tool.setuptools.package-data]
+tganalyzer = [
+    "core/grammars/*.lark",
+]
