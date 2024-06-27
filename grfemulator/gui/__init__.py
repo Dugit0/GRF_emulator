@@ -16,12 +16,15 @@ TODO:
     Filepath in statusbar
 """
 
+# TODO use Path
+LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo.png')
 
 class MarkDebugDialog(QDialog):
     def __init__(self, parent, func_names):
         super().__init__()
         
         self.setWindowTitle("Functions for debugging")
+        self.setWindowIcon(QIcon(LOGO_PATH))
 
         
         self.layout = QVBoxLayout()
@@ -56,9 +59,7 @@ class MainWindow(QMainWindow):
         self.saved_text = self.defcall_split_str
         self.debug_func_names = []
 
-        # TODO use Path
-        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo.png')
-        self.setWindowIcon(QIcon(logo_path))
+        self.setWindowIcon(QIcon(LOGO_PATH))
         self.setWindowTitle("GRF emulator")
         self.setGeometry(100, 100, 1200, 700)   # setting window geometry
         
