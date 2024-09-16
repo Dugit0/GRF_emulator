@@ -10,9 +10,9 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.package-dir]
-tganalyzer = "grfemulator"
+grfemulator = "grfemulator"
 
 [tool.setuptools.package-data]
-tganalyzer = [
+grfemulator = [
     "core/grammars/*.lark",
 ]
