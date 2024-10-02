@@ -54,12 +54,10 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         
-        self.defcall_split_str = "!!!"
-        
         # self.path holds the path of the currently open file.
         # If none, we haven't got a file open yet (or creating new).
         self.path = None
-        self.saved_text = self.defcall_split_str
+        self.saved_text = ""
         self.debug_func_names = []
 
         self.setWindowIcon(QIcon(LOGO_PATH))
@@ -278,7 +276,7 @@ class MainWindow(QMainWindow):
     def get_all_file_text(self):
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
-        text = definition + self.defcall_split_str + call
+        text = definition + call
         return text
 
     
@@ -307,7 +305,10 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 self.dialog_critical(str(e))
             else:
-                definition, _, call = text.partition(self.defcall_split_str)
+                try:
+                    definition, call = core.parse_code(text)
+                except core.CodeFormatError:
+                    definition, call = text, ""
                 self.path = path
                 self.editor.setPlainText(definition)
                 self.call_editor.setPlainText(call)
@@ -335,7 +336,7 @@ class MainWindow(QMainWindow):
     def _save_to_path(self, path):
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
-        text = definition + self.defcall_split_str + call
+        text = definition + call
         try:
             with open(path, 'w') as f:
                 f.write(text)
