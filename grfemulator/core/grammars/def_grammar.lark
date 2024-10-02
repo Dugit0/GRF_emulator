@@ -3,7 +3,7 @@
 // 2. comp
 // 3. rec
 
-start: [def ";" (def ";")*]
+start: "DEFINITION:" [def ";" (def ";")*]
 def: name "=" rec_exp
 ?rec_exp: comp_exp
         | rec_exp "<-" comp_exp                    -> rec

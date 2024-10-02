@@ -241,6 +241,18 @@ def gen_func(tree, func_dict):
         logging.error(f"Unexpected node in AST\n{tree}")
         sys.exit(1)
 
+def parse_code(code):
+    labels = ["DEFINITION:\n", "CALL:\n"]
+    if any(map(lambda l: code.find(l) == -1, labels)):
+        raise CodeFormatError("The file was corrupted. The 'DEFINITION:' and "
+                              "'CALL:' tags were not found.")
+    ind1, ind2 = sorted(list(map(lambda l: code.find(l), labels)))
+    definition, call = code[ind1:ind2].strip(), code[ind2:].strip()
+    if definition.startswith("CALL:"):
+        definition, call = call, definition
+    return definition, call
+
+
 
 def parse_def(definition):
     func_dict = {}
