@@ -3,7 +3,7 @@ name = "grfemulator"
 description = "Emulator of general recursive function"
 version = "0.0.1"
 requires-python = ">=3.10"
-dependencies = ["pyqt5", "lark"]
+dependencies = ["PySide6", "lark"]
 
 [build-system]
 requires = ["setuptools"]

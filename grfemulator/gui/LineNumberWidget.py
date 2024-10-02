@@ -26,9 +26,9 @@ SOFTWARE.
 """
 
 
-from PyQt5.QtGui import QFont, QTextCursor
-from PyQt5.QtWidgets import QTextBrowser
-from PyQt5.QtCore import Qt
+from PySide6.QtGui import QFont, QTextCursor
+from PySide6.QtWidgets import QTextBrowser
+from PySide6.QtCore import Qt
 
 
 class LineNumberWidget(QTextBrowser):

@@ -1,4 +1,5 @@
-lark==1.1.9
-PyQt5==5.15.10
-PyQt5-Qt5==5.15.2
-PyQt5-sip==12.13.0
+lark==1.2.2
+PySide6==6.7.3
+PySide6_Addons==6.7.3
+PySide6_Essentials==6.7.3
+shiboken6==6.7.3

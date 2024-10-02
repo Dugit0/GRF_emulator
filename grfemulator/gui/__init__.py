@@ -1,7 +1,10 @@
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtPrintSupport import *
+from PySide6.QtGui import (QIcon, QAction, QFontDatabase)
+from PySide6.QtWidgets import (QApplication, QWidget, QMainWindow, QDialog,
+                               QVBoxLayout, QHBoxLayout, QPlainTextEdit,
+                               QSplitter, QStatusBar, QToolBar, QLabel,
+                               QCheckBox, QMessageBox, QFileDialog,
+                               QDialogButtonBox)
+from PySide6.QtCore import Qt
 from .LineNumberWidget import LineNumberWidget
 from .. import core
 import os
@@ -346,7 +349,7 @@ class MainWindow(QMainWindow):
     
     def update_statusbar(self):
         # setting window title with prefix as file name
-        # suffix as PyQt5 Notepad
+        # suffix as PySide6 Notepad
         filename = self.path if self.path else "Untitled"
         is_saved_marker = "*" if not self.is_saved() else ""
         self.status.showMessage(f"File: {filename}{is_saved_marker}")
@@ -435,7 +438,7 @@ class MainWindow(QMainWindow):
 
 
 def run_gui():
-    app = QApplication(sys.argv)            # creating PyQt5 application
+    app = QApplication(sys.argv)            # creating PySide6 application
     app.setApplicationName("GRF emulator")  # setting application name
     window = MainWindow()                   # creating a main window object
     sys.exit(app.exec_())                   # loop
