@@ -10,7 +10,7 @@ from .LineNumberWidget import LineNumberWidget
 from .. import core
 from . import darkorange
 import re
-import os
+from pathlib import Path
 import sys
 
 """
@@ -23,7 +23,7 @@ TODO:
 """
 
 # TODO use Path
-LOGO_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo.png')
+LOGO_PATH = str(Path(__file__).resolve().parent / "logo.png")
 
 class MarkDebugDialog(QDialog):
     def __init__(self, parent, func_names):
