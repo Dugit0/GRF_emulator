@@ -1,4 +1,5 @@
-from PySide6.QtGui import (QIcon, QAction, QFontDatabase)
+from PySide6.QtGui import (QColor, QIcon, QAction, QFont, QFontDatabase,
+                           QSyntaxHighlighter, QTextCharFormat)
 from PySide6.QtWidgets import (QApplication, QWidget, QMainWindow, QDialog,
                                QVBoxLayout, QHBoxLayout, QPlainTextEdit,
                                QSplitter, QStatusBar, QToolBar, QLabel,
@@ -50,6 +51,41 @@ class MarkDebugDialog(QDialog):
         self.setLayout(self.layout)
 
 
+class HighlighterPalette():
+    def addHighlight(self, color_name, foreground, weight=QFont.Normal):
+        new_color = QTextCharFormat()
+        new_color.setForeground(foreground)
+        new_color.setFontWeight(weight)
+        setattr(self, color_name, new_color)
+
+
+class Highlighter(QSyntaxHighlighter):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.palette = HighlighterPalette()
+        # Gruvbox light scheme
+        self.palette.addHighlight("red", QColor(204, 36, 29))
+        self.palette.addHighlight("red_bold", QColor(204, 36, 29), QFont.Bold)
+        self.palette.addHighlight("green", QColor(152, 151, 26))
+        self.palette.addHighlight("yellow", QColor(215, 153, 33))
+        self.palette.addHighlight("blue", QColor(69, 133, 136))
+        self.palette.addHighlight("purple", QColor(177, 98, 134))
+        self.palette.addHighlight("aqua", QColor(104, 157, 106))
+        self.palette.addHighlight("orange", QColor(214, 93, 14))
+        
+        self._mappings = {
+                r'DEFINITION:|CALL:': self.palette.red_bold,
+                r'{|}|\(|\)|=': self.palette.orange,
+                r',': self.palette.aqua,
+                r'<-|\?': self.palette.green,
+                }
+        
+    def highlightBlock(self, text):
+        for pattern, format in self._mappings.items():
+            for match in re.finditer(pattern, text):
+                start, end = match.span()
+                self.setFormat(start, end - start, format)
+
 class MainWindow(QMainWindow):
 
     # constructor
@@ -75,6 +111,10 @@ class MainWindow(QMainWindow):
         self.editor = QPlainTextEdit()                                # creating a QPlainTextEdit object
         self.editor.setFont(fixedfont)
         self.editor.textChanged.connect(self.line_widget_line_count_changed)
+        
+        self.highlighter = Highlighter()
+        self.highlighter.setDocument(self.editor.document())
+
         self.line_widget = LineNumberWidget(self.editor)
         # editor_layout = QHBoxLayout()
         # editor_layout.addWidget(self.line_widget)
@@ -83,6 +123,8 @@ class MainWindow(QMainWindow):
         # Call editor
         self.call_editor = QPlainTextEdit()
         self.call_editor.setFont(fixedfont)
+        self.call_highlighter = Highlighter()
+        self.call_highlighter.setDocument(self.call_editor.document())
 
         # Window for run result
         self.run_result = QPlainTextEdit(self)
