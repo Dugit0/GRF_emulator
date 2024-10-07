@@ -7,6 +7,8 @@ from PySide6.QtWidgets import (QApplication, QWidget, QMainWindow, QDialog,
 from PySide6.QtCore import Qt
 from .LineNumberWidget import LineNumberWidget
 from .. import core
+from . import darkorange
+import re
 import os
 import sys
 
@@ -441,5 +443,6 @@ class MainWindow(QMainWindow):
 def run_gui():
     app = QApplication(sys.argv)            # creating PySide6 application
     app.setApplicationName("GRF emulator")  # setting application name
+    app.setStyleSheet(darkorange.getStyleSheet())
     window = MainWindow()                   # creating a main window object
     sys.exit(app.exec_())                   # loop
