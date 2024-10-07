@@ -320,7 +320,12 @@ class MainWindow(QMainWindow):
     def get_all_file_text(self):
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
-        text = definition + call
+        if definition and call:
+            # definition and call not empty
+            text = definition + "\n\n" + call
+        else:
+            # for correct saving empty files
+            text = definition + call
         return text
 
     
@@ -378,9 +383,7 @@ class MainWindow(QMainWindow):
 
     
     def _save_to_path(self, path):
-        definition = self.editor.toPlainText()
-        call = self.call_editor.toPlainText()
-        text = definition + call
+        text = self.get_all_file_text()
         try:
             with open(path, 'w') as f:
                 f.write(text)
