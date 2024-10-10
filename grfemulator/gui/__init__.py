@@ -195,36 +195,42 @@ class MainWindow(QMainWindow):
         undo_action = QAction("Undo", self)               # undo action
         undo_action.setStatusTip("Undo last change")      # adding status tip
         undo_action.triggered.connect(self.editor.undo)   # when triggered undo the editor
+        undo_action.setShortcut("Ctrl+Z")
         edit_menu.addAction(undo_action)
 
         # redo action
         redo_action = QAction("Redo", self)
         redo_action.setStatusTip("Redo last change")
         redo_action.triggered.connect(self.editor.redo)
+        redo_action.setShortcut("Ctrl+Shift+Z")
         edit_menu.addAction(redo_action)
 
         # cut action
         cut_action = QAction("Cut", self)
         cut_action.setStatusTip("Cut selected text")
         cut_action.triggered.connect(self.editor.cut)
+        cut_action.setShortcut("Ctrl+X")
         edit_menu.addAction(cut_action)
 
         # copy action
         copy_action = QAction("Copy", self)
         copy_action.setStatusTip("Copy selected text")
         copy_action.triggered.connect(self.editor.copy)
+        copy_action.setShortcut("Ctrl+C")
         edit_menu.addAction(copy_action)
 
         # paste action
         paste_action = QAction("Paste", self)
         paste_action.setStatusTip("Paste from clipboard")
         paste_action.triggered.connect(self.editor.paste)
+        paste_action.setShortcut("Ctrl+V")
         edit_menu.addAction(paste_action)
 
         # select all action
         select_action = QAction("Select all", self)
         select_action.setStatusTip("Select all text")
         select_action.triggered.connect(self.editor.selectAll)
+        select_action.setShortcut("Ctrl+A")
         edit_menu.addAction(select_action)
 
         # edit_toolbar = QToolBar("Edit")
