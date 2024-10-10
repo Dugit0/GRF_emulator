@@ -1,19 +1,20 @@
 from lark import Lark
 import importlib.resources
 from . import grammars
-import os
 import sys
 import logging
-import traceback
+# import traceback
 
 logging.basicConfig(level=logging.WARNING, filename='log.log', filemode='w')
 
 GLOBAL_DEBUG_LOG = ""
 
+
 # -------------- Custom exception --------------
 class CodeFormatError(Exception):
     def __init__(self, message):
         self.message = message
+
     def __str__(self):
         return self.message
 
@@ -25,8 +26,10 @@ class ArgsError(Exception):
     def __init__(self, expected, received):
         self.expected = expected
         self.received = received
+
     def __str__(self):
-        return f"Number of arguments mismatch. Expected - {self.expected}. Received - {self.received}."
+        return (f"Number of arguments mismatch. Expected - {self.expected}."
+                f" Received - {self.received}.")
 
 
 class DefError(Exception):
@@ -35,6 +38,7 @@ class DefError(Exception):
     """
     def __init__(self, name):
         self.name = name
+
     def __str__(self):
         return f"Name '{self.name}' is not defined."
 
@@ -44,7 +48,8 @@ def get_parser(gramm_name):
     """
     Return parser by name of the grammar.
     """
-    with importlib.resources.files(grammars).joinpath(gramm_name).open() as file_gramm:
+    gramm_path = importlib.resources.files(grammars).joinpath(gramm_name)
+    with gramm_path.open() as file_gramm:
         grammar = file_gramm.read()
     return Lark(grammar, start="start", parser='lalr')
     # return Lark(grammar, start="start")
@@ -67,7 +72,7 @@ class Func:
         self.n = n
         self.name = name
         self.full_name = ""
-        self.call_func = lambda : None
+        self.call_func = lambda: None
         self._debug = False
         self._show_call = False
         self._show_stack = False
@@ -100,10 +105,11 @@ class Func:
             raise ArgsError(self.n, len(args))
         # if self.show_stack:
         if self.show_call:
-            GLOBAL_DEBUG_LOG += f"{self.name}({', '.join(list(map(str, args)))})\n"
+            GLOBAL_DEBUG_LOG += (f"{self.name}"
+                                 f"({', '.join(list(map(str, args)))})\n")
             return self.call_func(*args)
         else:
-        #     return self.optimazed_call(*args)
+            # return self.optimazed_call(*args)
             return self.call_func(*args)
 
 # ================ Move ================
@@ -112,11 +118,12 @@ class Func:
 #     if isinstance(func.call_func, Func):
 #         reqursive_mark()
 
-def mark_function(func_name, func_dict):
-    func_dict[func_dict].show_stack = True
+# def mark_function(func_name, func_dict):
+#     func_dict[func_dict].show_stack = True
 
-    pass
+#     pass
 # ================ Move ================
+
 
 def func_o():
     res = Func(1, 'o')
@@ -175,7 +182,7 @@ def recursion(base, func):
         new_args.append(new_func(*new_args))
         return func(*new_args)
     # def new_func(*args):
-    #     base_args = args[:-1] 
+    #     base_args = args[:-1]
     #     result = base(*base_args)
     #     for i in range(1, args[-1] + 1):
     #         result = func(*[*base_args, i - 1, result])
@@ -226,14 +233,18 @@ def gen_func(tree, func_dict):
     elif mod == 'const':
         return func_const(*list(map(lambda a: int(a.value), tree.children)))
     elif mod == 'comp':
-        return composition(*list(map(lambda a: gen_func(a, func_dict), tree.children)))
+        return composition(*list(map(lambda a: gen_func(a, func_dict),
+                                     tree.children)))
     elif mod == 'rec':
-        return recursion(*list(map(lambda a: gen_func(a, func_dict), tree.children)))
+        return recursion(*list(map(lambda a: gen_func(a, func_dict),
+                                   tree.children)))
     elif mod == 'min':
         # if len(tree.children) != 2:
-        #     raise 
+        #     raise
         # print(tree)
-        return minimisation(*[gen_func(tree.children[0], func_dict), int(tree.children[1].value), *tree.children[2:]])
+        return minimisation(*[gen_func(tree.children[0], func_dict),
+                              int(tree.children[1].value),
+                              *tree.children[2:]])
         # return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
     else:
         # print("Unexpected node in AST", file=sys.stderr)
@@ -241,17 +252,17 @@ def gen_func(tree, func_dict):
         logging.error(f"Unexpected node in AST\n{tree}")
         sys.exit(1)
 
+
 def parse_code(code):
     labels = ["DEFINITION:\n", "CALL:\n"]
-    if any(map(lambda l: code.find(l) == -1, labels)):
+    if any(map(lambda label: code.find(label) == -1, labels)):
         raise CodeFormatError("The file was corrupted. The 'DEFINITION:' and "
                               "'CALL:' tags were not found.")
-    ind1, ind2 = sorted(list(map(lambda l: code.find(l), labels)))
+    ind1, ind2 = sorted(list(map(lambda label: code.find(label), labels)))
     definition, call = code[ind1:ind2].strip(), code[ind2:].strip()
     if definition.startswith("CALL:"):
         definition, call = call, definition
     return definition, call
-
 
 
 def parse_def(definition):
@@ -292,9 +303,11 @@ def parse_call(call, func_dict):
             else:
                 func = get_func(name_val, func_dict)
         elif mod == 'i':
-            func = func_i(*list(map(lambda a: int(a.value), call_body.children)))
+            func = func_i(*list(map(lambda a: int(a.value),
+                                    call_body.children)))
         elif mod == 'const':
-            func = func_const(*list(map(lambda a: int(a.value), call_body.children)))
+            func = func_const(*list(map(lambda a: int(a.value),
+                                        call_body.children)))
         else:
             # print("Unexpected node in AST", file=sys.stderr)
             # print(tree, file=sys.stderr)
@@ -304,4 +317,3 @@ def parse_call(call, func_dict):
         ans.append((func, args))
         # print('----')
     return tuple(ans)
-

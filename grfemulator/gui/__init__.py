@@ -15,38 +15,34 @@ import sys
 
 """
 TODO:
-    setWindowTitle
-    setWindowIcon
     QToolTip
     exitAction.setShortcut('Ctrl+Q')
-    Filepath in statusbar
 """
 
-# TODO use Path
 LOGO_PATH = str(Path(__file__).resolve().parent / "logo.png")
+
 
 class MarkDebugDialog(QDialog):
     def __init__(self, parent, func_names):
         super().__init__()
-        
+
         self.setWindowTitle("Functions for debugging")
         self.setWindowIcon(QIcon(LOGO_PATH))
 
-        
         self.layout = QVBoxLayout()
-        
+
         message = QLabel("Mark functions for debugging")
         self.layout.addWidget(message)
-        
+
         self.checkboxes = [QCheckBox(name, self) for name in func_names]
         for checkbox in self.checkboxes:
             self.layout.addWidget(checkbox)
-        
+
         buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.buttonBox = QDialogButtonBox(buttons)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
-        
+
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
 
@@ -72,26 +68,25 @@ class Highlighter(QSyntaxHighlighter):
         self.palette.addHighlight("purple", QColor(177, 98, 134))
         self.palette.addHighlight("aqua", QColor(104, 157, 106))
         self.palette.addHighlight("orange", QColor(214, 93, 14))
-        
+
         self._mappings = {
                 r'DEFINITION:|CALL:': self.palette.red_bold,
                 r'{|}|\(|\)|=': self.palette.orange,
                 r',': self.palette.aqua,
                 r'<-|\?': self.palette.green,
                 }
-        
+
     def highlightBlock(self, text):
         for pattern, format in self._mappings.items():
             for match in re.finditer(pattern, text):
                 start, end = match.span()
                 self.setFormat(start, end - start, format)
 
-class MainWindow(QMainWindow):
 
-    # constructor
+class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        
+
         # self.path holds the path of the currently open file.
         # If none, we haven't got a file open yet (or creating new).
         self.path = None
@@ -101,25 +96,22 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(LOGO_PATH))
         self.setWindowTitle("GRF emulator")
         self.setGeometry(100, 100, 1200, 700)   # setting window geometry
-        
-        layout = QHBoxLayout()   # creating a layout
+
+        layout = QHBoxLayout()
 
         fixedfont = QFontDatabase.systemFont(QFontDatabase.FixedFont) # setting font to the editor
         fixedfont.setPointSize(12)
-        
+
         # Main editor and line number widget
-        self.editor = QPlainTextEdit()                                # creating a QPlainTextEdit object
+        self.editor = QPlainTextEdit()
         self.editor.setFont(fixedfont)
         self.editor.textChanged.connect(self.line_widget_line_count_changed)
-        
+
         self.highlighter = Highlighter()
         self.highlighter.setDocument(self.editor.document())
 
         self.line_widget = LineNumberWidget(self.editor)
-        # editor_layout = QHBoxLayout()
-        # editor_layout.addWidget(self.line_widget)
-        # editor_layout.addWidget(self.editor)
-        
+
         # Call editor
         self.call_editor = QPlainTextEdit()
         self.call_editor.setFont(fixedfont)
@@ -130,7 +122,7 @@ class MainWindow(QMainWindow):
         self.run_result = QPlainTextEdit(self)
         self.run_result.setFont(fixedfont)
         self.run_result.setReadOnly(True)
-        
+
         # Right vertical spliter
         splitter1 = QSplitter(Qt.Orientation.Vertical)
         splitter1.addWidget(self.call_editor)
@@ -143,7 +135,7 @@ class MainWindow(QMainWindow):
         splitter2.setSizes([200, 100])
 
         layout.addWidget(self.line_widget)
-        layout.addWidget(splitter2)                        # adding editor to the layout
+        layout.addWidget(splitter2)
 
 
         # Set central widget
@@ -158,14 +150,14 @@ class MainWindow(QMainWindow):
         # Update statusbar when file is changed
         self.editor.textChanged.connect(self.update_statusbar)
         self.call_editor.textChanged.connect(self.update_statusbar)
-        
-        
+
+
         # ====== Menu bar ======
         menu_bar = self.menuBar()
-        
+
         # === File menu in menu bar ===
         file_menu = menu_bar.addMenu("&File")               # creating a file menu
-        
+
         # open file action
         open_file_action = QAction("Open file", self)       # creating a open file action
         open_file_action.setStatusTip("Open file")          # setting status tip
@@ -247,11 +239,11 @@ class MainWindow(QMainWindow):
         # wrap action
         wrap_action = QAction("Wrap text to window", self)
         wrap_action.setStatusTip("Check to wrap text to window")
-        wrap_action.setCheckable(True)                        # making it checkable
-        wrap_action.setChecked(True)                          # making it checked
-        wrap_action.triggered.connect(self.edit_toggle_wrap)  # adding action
-        edit_menu.addAction(wrap_action)                      # adding it to edit menu not to the tool bar
-        
+        wrap_action.setCheckable(True)
+        wrap_action.setChecked(True)
+        wrap_action.triggered.connect(self.edit_toggle_wrap)
+        edit_menu.addAction(wrap_action)
+
         # === Run menu in menu bar ===
         run_menu = self.menuBar().addMenu("&Run")
 
@@ -280,25 +272,24 @@ class MainWindow(QMainWindow):
         run_toolbar = QToolBar("Edit")
         self.addToolBar(run_toolbar)
         run_toolbar.addAction(run_action)
-        
 
-        self.update_statusbar()             # calling update title method
+
+        self.update_statusbar()         # calling update title method
         self.show()                     # showing all the components
 
     def closeEvent(self, event):
         if not self.is_saved():
             self.unsaved_file_dialog()
 
-    
-    # creating dialog critical method
-    # to show errors
+
+    # creating dialog critical method to show errors
     def dialog_critical(self, s):
         dlg = QMessageBox(self)            # creating a QMessageBox object
         dlg.setText(s)                     # setting text to the dlg
         dlg.setIcon(QMessageBox.Critical)  # setting icon to it
         dlg.show()                         # showing it
 
-    
+
     def unsaved_file_dialog(self):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("File is unsaved")
@@ -309,14 +300,14 @@ class MainWindow(QMainWindow):
         if button == QMessageBox.Yes:
             self.file_save()
 
-    
+
     def line_widget_line_count_changed(self):
         # Signal for line widget
         if self.line_widget:
             n = int(self.editor.document().lineCount())
             self.line_widget.changeLineCount(n)
 
-    
+
     def get_all_file_text(self):
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
@@ -328,11 +319,11 @@ class MainWindow(QMainWindow):
             text = definition + call
         return text
 
-    
+
     def get_definition_text(self):
         return self.editor.toPlainText()
 
-    
+
     def get_call_text(self):
         return self.call_editor.toPlainText()
 
@@ -341,12 +332,12 @@ class MainWindow(QMainWindow):
         cur_text = self.get_all_file_text()
         return cur_text == self.saved_text
 
-    
+
     def file_open(self):
         if not self.is_saved():
             self.unsaved_file_dialog()
-        path, _ = QFileDialog.getOpenFileName(self, "Open file", "", 
-                            "All files (*.*)")
+        path, _ = QFileDialog.getOpenFileName(self, "Open file", "",
+                                              "All files (*.*)")
         if path:
             try:
                 with open(path) as f:
@@ -364,24 +355,24 @@ class MainWindow(QMainWindow):
                 self.saved_text = self.get_all_file_text()
                 self.update_statusbar()
 
-    
+
     def file_save(self):
         if self.path is None:
             self.file_saveas()
             return
         self._save_to_path(self.path)
 
-    
+
     def file_saveas(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save file", "", 
-                            "All files (*.*)")
+        path, _ = QFileDialog.getSaveFileName(self, "Save file", "",
+                                              "All files (*.*)")
         if not path:
             # return this method
             # i.e no action performed
             return
         self._save_to_path(path)
 
-    
+
     def _save_to_path(self, path):
         text = self.get_all_file_text()
         try:
@@ -394,7 +385,7 @@ class MainWindow(QMainWindow):
             self.saved_text = self.get_all_file_text()
             self.update_statusbar()
 
-    
+
     def update_statusbar(self):
         # setting window title with prefix as file name
         # suffix as PySide6 Notepad
@@ -402,12 +393,13 @@ class MainWindow(QMainWindow):
         is_saved_marker = "*" if not self.is_saved() else ""
         self.status.showMessage(f"File: {filename}{is_saved_marker}")
 
-    
+
     # action called by edit toggle
     def edit_toggle_wrap(self):
-        self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0 else 0)
+        self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0
+                                    else 0)
 
-    
+
     def run_program(self):
         if self.path is not None:
             self.file_save()
@@ -420,7 +412,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.run_result.setPlainText(str(e))
             return
-        
+
         for func, args in called_func:
             try:
                 ans = str(func(*args))
@@ -442,7 +434,9 @@ class MainWindow(QMainWindow):
         dlg = MarkDebugDialog(self, list(func_dict.keys()))
         if dlg.exec():
             # MarkDebugDialog return 'OK'
-            self.debug_func_names = [checkbox.text() for checkbox in dlg.checkboxes if checkbox.isChecked()]
+            self.debug_func_names = [checkbox.text()
+                                     for checkbox in dlg.checkboxes
+                                     if checkbox.isChecked()]
         else:
             # MarkDebugDialog return 'Cancel'
             pass
@@ -460,7 +454,8 @@ class MainWindow(QMainWindow):
             self.run_result.setPlainText(str(e))
             return
 
-        if not all([func_name in func_dict for func_name in self.debug_func_names]):
+        if not all([func_name in func_dict
+                    for func_name in self.debug_func_names]):
             self.mark_debug_func()
 
         for func_name in self.debug_func_names:
@@ -471,7 +466,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             self.run_result.setPlainText(str(e))
             return
-        
+
         for func, args in called_func:
             try:
                 ans = str(func(*args))
@@ -485,9 +480,18 @@ class MainWindow(QMainWindow):
         pass
 
 
+def get_style_sheet(relative_path):
+    path = Path(__file__).resolve().parent
+    for i in relative_path:
+        path /= i
+    with open(path) as f:
+        return f.read()
+
+
 def run_gui():
     app = QApplication(sys.argv)            # creating PySide6 application
     app.setApplicationName("GRF emulator")  # setting application name
-    app.setStyleSheet(darkorange.getStyleSheet())
+    # app.setStyleSheet(darkorange.getStyleSheet())
+    app.setStyleSheet(get_style_sheet(["schemes", "Aqua.qss"]))
     window = MainWindow()                   # creating a main window object
     sys.exit(app.exec_())                   # loop

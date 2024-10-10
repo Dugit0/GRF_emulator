@@ -26,7 +26,7 @@ SOFTWARE.
 """
 
 
-from PySide6.QtGui import QFont, QTextCursor
+from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import QTextBrowser
 from PySide6.QtCore import Qt
 
@@ -66,7 +66,8 @@ class LineNumberWidget(QTextBrowser):
             first_v = self.verticalScrollBar().value()
             for i in range(self.lineCount, self.lineCount + diff, -1):
                 self.moveCursor(QTextCursor.End, QTextCursor.MoveAnchor)
-                self.moveCursor(QTextCursor.StartOfLine, QTextCursor.MoveAnchor)
+                self.moveCursor(QTextCursor.StartOfLine,
+                                QTextCursor.MoveAnchor)
                 self.moveCursor(QTextCursor.End, QTextCursor.KeepAnchor)
                 self.textCursor().removeSelectedText()
                 self.textCursor().deletePreviousChar()
@@ -79,14 +80,14 @@ class LineNumberWidget(QTextBrowser):
         self.lineCount = n
 
     def initStyleSheet(self):
-        styleSheet = f'''
-                       QTextBrowser 
-                       {{ 
-                       background: transparent; 
-                       border: none; 
-                       color: #AAA; 
-                       }}
-                       '''
+        styleSheet = '''
+                     QTextBrowser
+                     {
+                     background: transparent;
+                     border: none;
+                     color: #AAA;
+                     }
+                     '''
         self.setStyleSheet(styleSheet)
         self.setFixedWidth(self.externFont.pointSize() * 4)
 
