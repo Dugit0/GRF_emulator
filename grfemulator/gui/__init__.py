@@ -1,14 +1,18 @@
 from PySide6.QtGui import (QColor, QIcon, QAction, QFont, QFontDatabase,
                            QSyntaxHighlighter, QTextCharFormat)
-from PySide6.QtWidgets import (QApplication, QWidget, QMainWindow, QDialog,
-                               QVBoxLayout, QHBoxLayout, QPlainTextEdit,
-                               QSplitter, QStatusBar, QToolBar, QLabel,
+from PySide6.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
+                               QMainWindow, QDialog,
+                               QVBoxLayout, QHBoxLayout, QFormLayout,
+                               QPlainTextEdit, QSplitter, QTabWidget,
+                               QStatusBar, QToolBar, QComboBox, QLabel,
                                QCheckBox, QMessageBox, QFileDialog,
                                QDialogButtonBox)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import (Qt, QCoreApplication, QSize, QSettings)
 from .LineNumberWidget import LineNumberWidget
+from .. import __version__
 from .. import core
 from . import darkorange
+import time
 import re
 from pathlib import Path
 import sys
@@ -20,11 +24,69 @@ TODO:
 """
 
 LOGO_PATH = str(Path(__file__).resolve().parent / "logo.png")
+COLOR_SCHEMES_PATH = Path(__file__).resolve().parent / "schemes"
+
+
+class SettingsDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setWindowTitle("Settings")
+        self.setWindowIcon(QIcon(LOGO_PATH))
+        default_size = int(min(parent.width(), parent.height()) * 0.7)
+        self.setMinimumSize(QSize(default_size, default_size))
+
+        self.apply_flag = False
+        self.update_message = "To apply the settings, restart the application!"
+
+        layout = QVBoxLayout()
+        tabs = QTabWidget()
+
+        # View page
+        view_page = QWidget(self)
+        self.view_page_layout = QFormLayout()
+        self.color_combo_box = QComboBox(self)
+        self.schemes = {s.stem: s for s in COLOR_SCHEMES_PATH.glob("*.qss")}
+        self.color_combo_box.addItems(list(self.schemes.keys()))
+        cur_text = Path(
+                parent.settings.value("COLOR_SCHEME",
+                                      str(COLOR_SCHEMES_PATH / "Aqua.qss"),
+                                      type=str)
+                ).stem
+        self.color_combo_box.setCurrentText(cur_text)
+        self.update_label = QLabel(" " * len(self.update_message))
+
+        self.view_page_layout.addRow("Color scheme:", self.color_combo_box)
+        self.view_page_layout.addRow(self.update_label, QLabel())
+        view_page.setLayout(self.view_page_layout)
+        tabs.addTab(view_page, 'View settings')
+
+        button_box = QDialogButtonBox()
+        apply_button = button_box.addButton("Apply",
+                                            QDialogButtonBox.ApplyRole)
+        cancel_button = button_box.addButton("Cancel",
+                                             QDialogButtonBox.RejectRole)
+        apply_button.clicked.connect(self.accept_settings)
+        # button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+
+        layout.addWidget(tabs)
+        layout.addWidget(button_box)
+        self.setLayout(layout)
+
+    def accept_settings(self):
+        self.parent().settings.setValue(
+                "COLOR_SCHEME",
+                str(self.schemes[self.color_combo_box.currentText()])
+                )
+        if not self.apply_flag:
+            self.apply_flag = True
+            self.update_label.setText(self.update_message)
 
 
 class MarkDebugDialog(QDialog):
     def __init__(self, parent, func_names):
-        super().__init__()
+        super().__init__(parent)
 
         self.setWindowTitle("Functions for debugging")
         self.setWindowIcon(QIcon(LOGO_PATH))
@@ -39,11 +101,11 @@ class MarkDebugDialog(QDialog):
             self.layout.addWidget(checkbox)
 
         buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        self.buttonBox = QDialogButtonBox(buttons)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.button_box = QDialogButtonBox(buttons)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
 
-        self.layout.addWidget(self.buttonBox)
+        self.layout.addWidget(self.button_box)
         self.setLayout(self.layout)
 
 
@@ -96,6 +158,16 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(LOGO_PATH))
         self.setWindowTitle("GRF emulator")
         self.setGeometry(100, 100, 1200, 700)   # setting window geometry
+
+        self.settings = QSettings()
+        color_scheme = self.settings.value(
+                "COLOR_SCHEME",
+                str(COLOR_SCHEMES_PATH / "Aqua.qss"),
+                type=str
+                )
+        app = QCoreApplication.instance()
+        with open(color_scheme) as color_scheme_file:
+            app.setStyleSheet(color_scheme_file.read())
 
         layout = QHBoxLayout()
 
@@ -274,6 +346,25 @@ class MainWindow(QMainWindow):
         debug_action.setShortcut("F8")
         debug_menu.addAction(debug_action)
 
+        # === Settings menu in menu bar ===
+        settings_menu = self.menuBar().addMenu("&Settings")
+
+        settings_action = QAction("Settings", self)
+        settings_action.setStatusTip("Settings menu")
+        settings_action.triggered.connect(self.open_settings_menu)
+        settings_action.setShortcut("F4")
+        settings_menu.addAction(settings_action)
+
+        # DEBUG menu
+        # TODO delete this function
+        # === Test menu in menu bar ===
+        # test_menu = self.menuBar().addMenu("&TEST")
+
+        # test_action = QAction("Color schemes test", self)
+        # test_action.setStatusTip("Color schemes test")
+        # test_action.triggered.connect(self.color_schemes_test)
+        # test_menu.addAction(test_action)
+
         # === Run toolbar ===
         run_toolbar = QToolBar("Edit")
         self.addToolBar(run_toolbar)
@@ -282,6 +373,16 @@ class MainWindow(QMainWindow):
 
         self.update_statusbar()         # calling update title method
         self.show()                     # showing all the components
+
+
+    # DEBUG function
+    # TODO delete this function
+    # def color_schemes_test(self):
+    #     for path in COLOR_SCHEMES_PATH.glob("*.qss"):
+    #         app = QCoreApplication.instance()
+    #         app.setStyleSheet(get_style_sheet(str(path)))
+    #         time.sleep(5)
+
 
     def closeEvent(self, event):
         if not self.is_saved():
@@ -428,6 +529,16 @@ class MainWindow(QMainWindow):
             self.run_result.appendPlainText(ans)
 
 
+    def open_settings_menu(self):
+        dlg = SettingsDialog(self)
+        if dlg.exec():
+            # MarkDebugDialog return 'OK'
+            pass
+        else:
+            # MarkDebugDialog return 'Cancel'
+            pass
+
+
     def mark_debug_func(self):
         # Try to parce definition
         definition = self.editor.toPlainText()
@@ -486,18 +597,13 @@ class MainWindow(QMainWindow):
         pass
 
 
-def get_style_sheet(relative_path):
-    path = Path(__file__).resolve().parent
-    for i in relative_path:
-        path /= i
-    with open(path) as f:
-        return f.read()
 
 
 def run_gui():
     app = QApplication(sys.argv)            # creating PySide6 application
     app.setApplicationName("GRF emulator")  # setting application name
-    # app.setStyleSheet(darkorange.getStyleSheet())
-    app.setStyleSheet(get_style_sheet(["schemes", "Aqua.qss"]))
+    app.setOrganizationName(app.applicationName())
+    app.setOrganizationDomain("https://github.com/Dugit0/GRF_emulator")
+    app.setApplicationVersion(__version__)
     window = MainWindow()                   # creating a main window object
     sys.exit(app.exec_())                   # loop
