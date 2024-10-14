@@ -192,19 +192,18 @@ def recursion(base, func):
     return res
 
 
-def minimisation(func, ind):
+def minimisation(func):
     # Test it!
-    if ind > func.n:
-        raise ArgsError(f"<= {func.n}", ind)
+    if func.n == 0:
+        raise ArgsError(f"<= 1", func.n)
     def new_func(*args):
         y = 0
         while True:
-            new_args = list(args[:ind - 1]) + [y] + list(args[ind - 1:-1])
-            ans = args[-1]
-            if func(*new_args) == ans:
+            new_args = list(args[:]) + [y]
+            if func(*new_args) == 0:
                 return y
             y += 1
-    res = Func(func.n)
+    res = Func(func.n - 1)
     res.call_func = new_func
     return res
 
@@ -241,10 +240,8 @@ def gen_func(tree, func_dict):
     elif mod == 'min':
         # if len(tree.children) != 2:
         #     raise
-        # print(tree)
-        return minimisation(*[gen_func(tree.children[0], func_dict),
-                              int(tree.children[1].value),
-                              *tree.children[2:]])
+        return minimisation(*list(map(lambda a: gen_func(a, func_dict),
+                                      tree.children)))
         # return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
     else:
         # print("Unexpected node in AST", file=sys.stderr)

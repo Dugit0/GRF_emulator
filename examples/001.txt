@@ -1,0 +1,71 @@
+DEFINITION:
+# Сигнум
+Sg = 0^0 <- s { 0^2 };
+# Отрицание сигнума
+Nsg = s { 0^0 } <- 0^2;
+# Сумма
+Sum = I^1_1 <- s { I^3_3 };
+# Умножение
+Mul = o <- Sum { I^3_1, I^3_3 };
+# Вычитание единицы (-1)
+ElDiff = 0^0 <- I^2_1;
+# Вычитание
+Diff = I^1_1 <- ElDiff { I^3_3 };
+G = Sum {
+         Nsg {
+              Diff {
+                    Mul {
+                         s { I^4_3 },
+                         I^4_2
+                    },
+                    I^4_1
+              }
+         },
+         I^4_4
+    };
+F = 0^2 <- G;
+# Деление
+Div = F { I^2_1, I^2_2, I^2_1 };
+# Остаток от деления
+Rest = Diff {
+             I^2_1,
+             Mul { I^2_2, Div }
+       };
+# Divisibility(x, y) - делимость x на y
+Divisibility = Nsg { Rest };
+F1 = 0^1 <- Sum {
+                Divisibility { I^3_1, I^3_2 },
+                I^3_3
+           };
+# Число делителей
+Num_of_divs = s { F1 { I^1_1, I^1_1 } };
+# Абсолютная разность
+AbsDiff = Sum {
+               Diff {
+                     I^2_1,
+                     I^2_2
+               },
+               Diff {
+                     I^2_2,
+                     I^2_1
+               }
+          };
+# Равно
+Equal = Nsg { AbsDiff };
+# Неравно
+Not_equal = Sg { AbsDiff };
+# Меньше или равно
+Less_eq = Nsg { Diff { I^2_1, I^2_2 } };
+# Является ли число простым
+Is_prime = Equal { Num_of_divs { I^1_1 }, 2^1 };
+# Является ли число составным
+Is_not_prime = Not_equal { Num_of_divs { I^1_1 }, 2^1 };
+
+# Min_prime_more_than(x) - минимальное простое число большее, чем x
+Min_prime_more_than = ? (Sum {
+                             Is_not_prime { I^2_2 },
+                             Less_eq {I^2_2, I^2_1}
+                        });
+
+CALL:
+Min_prime_more_than(15);
