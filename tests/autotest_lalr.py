@@ -5,25 +5,29 @@ from grfemulator import core
 class CoreTests(unittest.TestCase):
     def test_sg(self):
         definition = """
+        DEFINITION:
         Sg = 0^0 <- s { 0^2 };
         """.strip()
         func_dict = core.parse_def(definition)
         for i in range(20):
             call = f"""
+            CALL:
             Sg({i});
             """
             called_func = core.parse_call(call, func_dict)
             for func, args in called_func:
                 self.assertEqual(func(*args), 0 if i == 0 else 1)
 
-    
+
     def test_nsg(self):
         definition = """
+        DEFINITION:
         Nsg = s { 0^0 } <- 0^2;
         """.strip()
         func_dict = core.parse_def(definition)
         for i in range(10):
             call = f"""
+            CALL:
             Nsg({i});
             """.strip()
             called_func = core.parse_call(call, func_dict)
@@ -33,12 +37,14 @@ class CoreTests(unittest.TestCase):
 
     def test_sum(self):
         definition = """
+        DEFINITION:
         Sum = I^1_1 <- s { I^3_3 };
         """.strip()
         func_dict = core.parse_def(definition)
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 Sum({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
@@ -48,6 +54,7 @@ class CoreTests(unittest.TestCase):
 
     def test_mul(self):
         definition = """
+        DEFINITION:
         Sum = I^1_1 <- s { I^3_3 };
         Mul = o <- Sum { I^3_1, I^3_3 };
         """.strip()
@@ -55,6 +62,7 @@ class CoreTests(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 Mul({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
@@ -64,6 +72,7 @@ class CoreTests(unittest.TestCase):
 
     def test_diff(self):
         definition = """
+        DEFINITION:
         ElDiff = 0^0 <- I^2_1;
         Diff = I^1_1 <- ElDiff { I^3_3 };
         """.strip()
@@ -71,6 +80,7 @@ class CoreTests(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 Diff({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
@@ -80,10 +90,11 @@ class CoreTests(unittest.TestCase):
 
     def test_absdiff_1(self):
         definition = """
+        DEFINITION:
         Sum = I^1_1 <- s { I^3_3 };
         ElDiff = 0^0 <- I^2_1;
         Diff = I^1_1 <- ElDiff { I^3_3 };
-        AbsDiff = Sum { 
+        AbsDiff = Sum {
                       Diff {
                               I^2_1,
                               I^2_2
@@ -98,6 +109,7 @@ class CoreTests(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 AbsDiff({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
@@ -107,6 +119,7 @@ class CoreTests(unittest.TestCase):
 
     def test_absdiff_2(self):
         definition = """
+        DEFINITION:
         Sum = I^1_1 <- s { I^3_3 };
         ElDiff = 0^0 <- I^2_1;
         Diff = I^1_1 <- ElDiff { I^3_3 };
@@ -116,6 +129,7 @@ class CoreTests(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 AbsDiff({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
@@ -125,6 +139,7 @@ class CoreTests(unittest.TestCase):
 
     def test_absdiff_3(self):
         definition = """
+        DEFINITION:
         Sum = I^1_1 <- s { I^3_3 };
         ElDiff = 0^0 <- I^2_1;
         Diff = I^1_1 <- ElDiff { I^3_3 };
@@ -134,6 +149,7 @@ class CoreTests(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 AbsDiff({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
@@ -143,6 +159,7 @@ class CoreTests(unittest.TestCase):
 
     def test_div(self):
         definition = """
+        DEFINITION:
         Nsg = s { 0^0 } <- 0^2;
         Sum = I^1_1 <- s { I^3_3 };
         Mul = o <- Sum { I^3_1, I^3_3 };
@@ -156,6 +173,7 @@ class CoreTests(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 Div({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
@@ -165,6 +183,7 @@ class CoreTests(unittest.TestCase):
 
     def test_rest(self):
         definition = """
+        DEFINITION:
         Nsg = s { 0^0 } <- 0^2;
         Sum = I^1_1 <- s { I^3_3 };
         Mul = o <- Sum { I^3_1, I^3_3 };
@@ -179,6 +198,7 @@ class CoreTests(unittest.TestCase):
         for i in range(10):
             for j in range(10):
                 call = f"""
+                CALL:
                 Rest({i}, {j});
                 """.strip()
                 called_func = core.parse_call(call, func_dict)
