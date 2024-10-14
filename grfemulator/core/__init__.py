@@ -267,7 +267,6 @@ def parse_code(code):
 
 def parse_def(definition):
     func_dict = {}
-    definition = " ".join(definition.split())
     tree = my_parce(definition, "def_grammar.lark")
     # print(tree.pretty())
     # print('===================')

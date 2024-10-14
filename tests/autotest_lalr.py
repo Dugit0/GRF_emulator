@@ -205,6 +205,45 @@ class CoreTests(unittest.TestCase):
                 for func, args in called_func:
                     self.assertEqual(func(*args), i if j == 0 else i % j)
 
+    def test_comments(self):
+        definition = """
+        DEFINITION:
+        # It's my comment
+        Nsg = s { 0^0 } <- 0^2;
+        # It's my comment 2
+        Sum = I^1_1 <- s { I^3_3 };
+        Mul = o <- Sum { I^3_1, I^3_3 }; # It's my comment 3
+        ElDiff = 0^0 <- I^2_1;#It's my comment 4
+        Diff = I^1_1 <- ElDiff { I^3_3 }; # It's my comment 5 # asdf #### asdfadf #
+        G = Sum { Nsg { Diff { Mul { s { I^4_3 }, I^4_2 }, I^4_1 } }, I^4_4 };
+        /* Comment 6 */
+        F = 0^2 <- G;
+        /* Comment 7
+        Comment 7
+        Comment 7
+        Comment 7
+        Comment 7
+        */
+        Div = F { I^2_1, I^2_2, I^2_1 };
+        Rest = Diff { I^2_1, Mul { I^2_2, Div } };
+        /*
+        Comment 8
+        Comment 8
+        Comment 8
+        Comment 8
+        */
+        """.strip()
+        func_dict = core.parse_def(definition)
+        for i in range(10):
+            for j in range(10):
+                call = f"""
+                CALL:
+                Rest({i}, {j});
+                """.strip()
+                called_func = core.parse_call(call, func_dict)
+                for func, args in called_func:
+                    self.assertEqual(func(*args), i if j == 0 else i % j)
+
 
 if __name__ == "__main__":
     unittest.main()
