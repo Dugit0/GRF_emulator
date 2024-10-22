@@ -1,18 +1,20 @@
 from PySide6.QtGui import (QColor, QIcon, QAction, QFont, QFontDatabase,
-                           QSyntaxHighlighter, QTextCharFormat)
+                           QSyntaxHighlighter, QTextCharFormat, QTextDocument)
 from PySide6.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
-                               QMainWindow, QDialog,
+                               QMainWindow, QDialog, QTextEdit,
                                QVBoxLayout, QHBoxLayout, QFormLayout,
                                QPlainTextEdit, QSplitter, QTabWidget,
                                QStatusBar, QToolBar, QComboBox, QLabel,
                                QCheckBox, QMessageBox, QFileDialog,
                                QDialogButtonBox)
-from PySide6.QtCore import (Qt, QCoreApplication, QSize, QSettings)
+from PySide6.QtCore import (Qt, QObject, Signal, Slot, QRunnable, QThreadPool,
+                            QCoreApplication, QSize, QSettings)
 from .LineNumberWidget import LineNumberWidget
 from .. import __version__
 from .. import core
 from . import darkorange
 import time
+import traceback
 import re
 from pathlib import Path
 import sys
@@ -154,6 +156,10 @@ class MainWindow(QMainWindow):
         self.path = None
         self.saved_text = ""
         self.debug_func_names = []
+        self.run_counter = 1
+        self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(1)
+        self.semafor = False
 
         self.setWindowIcon(QIcon(LOGO_PATH))
         self.setWindowTitle("GRF emulator")
@@ -506,13 +512,17 @@ class MainWindow(QMainWindow):
         self.editor.setLineWrapMode(1 if self.editor.lineWrapMode() == 0
                                     else 0)
 
+    # def __exception_print(self, error):
+    #     # error = (exctype, value, traceback.format_exc())
+    #     self.run_result.appendPlainText(str(error[2]))
 
-    def run_program(self):
+    def __run_program_in_thread(self):
         if self.path is not None:
             self.file_save()
         definition = self.editor.toPlainText()
         call = self.call_editor.toPlainText()
         self.run_result.setPlainText("")
+        # TODO run counter
         try:
             func_dict = core.parse_def(definition)
             called_func = core.parse_call(call, func_dict)
@@ -527,6 +537,19 @@ class MainWindow(QMainWindow):
                 self.run_result.appendPlainText(str(e))
                 return
             self.run_result.appendPlainText(ans)
+
+    def __set_semafor_false(self):
+        self.semafor = False
+
+    def run_program(self):
+        worker = Worker(self.__run_program_in_thread)
+        worker.signals.finished.connect(self.__set_semafor_false)
+        # TODO Это костыль, чтобы нельзя было запустить больше одного процесса
+        # Нужно это убрать и сделать возможность останавливать задачу
+        if (self.semafor):
+            return
+        self.semafor = True
+        self.threadpool.start(worker)
 
 
     def open_settings_menu(self):
@@ -559,7 +582,7 @@ class MainWindow(QMainWindow):
             pass
 
 
-    def debug_program(self):
+    def __run_debug_in_thread(self):
         if self.path is not None:
             self.file_save()
         definition = self.editor.toPlainText()
@@ -593,9 +616,17 @@ class MainWindow(QMainWindow):
             self.run_result.appendPlainText(ans)
             self.run_result.appendPlainText(core.GLOBAL_DEBUG_LOG)
             core.GLOBAL_DEBUG_LOG = ""
-        # TODO
-        pass
 
+
+    def debug_program(self):
+        worker = Worker(self.__run_debug_in_thread)
+        worker.signals.finished.connect(self.__set_semafor_false)
+        # TODO Это костыль, чтобы нельзя было запустить больше одного процесса
+        # Нужно это убрать и сделать возможность останавливать задачу
+        if (self.semafor):
+            return
+        self.semafor = True
+        self.threadpool.start(worker)
 
 
 
