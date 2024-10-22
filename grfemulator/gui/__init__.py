@@ -26,7 +26,100 @@ TODO:
 """
 
 LOGO_PATH = str(Path(__file__).resolve().parent / "logo.png")
+HELP_PATH = str(Path(__file__).resolve().parent / "help.html")
 COLOR_SCHEMES_PATH = Path(__file__).resolve().parent / "schemes"
+
+
+class WorkerSignals(QObject):
+    """
+    Определяет сигналы доступные в выполняющемся треде класса Worker.
+
+    Поддерживаемые сигналы:
+
+    finished
+        No data
+
+    error
+        tuple (exctype, value, traceback.format_exc() )
+
+    result
+        object результат выполнения функции треда
+    """
+
+    finished = Signal()  # QtCore.Signal
+    error = Signal(str)
+    result = Signal(object)
+    progress = Signal(int)
+
+
+class Worker(QRunnable):
+    """
+    Обертка над тредом.
+
+    Унаследован от QRunnable. Создает и присоединяет сигналы к треду.
+
+    :param func: Функция запускающаяся в треде.
+    :type func: function
+    :param args: ``args`` передающиеся в ``func``
+    :param progress_flag: следует выставить True, если у функции есть
+    возможность посылать сигнал progress для обновления информации в GUI.
+    По умолчанию False.
+    """
+
+    def __init__(self, func, *args, progress_flag=False):
+        """Обертка над тредом."""
+        super(Worker, self).__init__()
+        # Store constructor arguments (re-used for processing)
+        self.func = func
+        self.args = args
+        self.progress_flag = progress_flag
+        self.signals = WorkerSignals()
+
+    @Slot()  # QtCore.Slot
+    def run(self):
+        """Запускает функцию с параметрами ``args`` и ``kwargs``."""
+        try:
+            if self.progress_flag:
+                result = self.func(*self.args,
+                                   progress=self.signals.progress)
+            else:
+                result = self.func(*self.args)
+        except Exception as e:
+            # traceback.print_exc()
+            # exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit(str(e))
+        else:
+            # Return the result of the processing
+            self.signals.result.emit(result)
+        finally:
+            # Done
+            self.signals.finished.emit()
+
+
+class HelpDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setWindowTitle("Settings")
+        self.setWindowIcon(QIcon(LOGO_PATH))
+        default_size = int(min(parent.width(), parent.height()) * 0.7)
+        self.setMinimumSize(QSize(default_size, default_size))
+
+        with open(HELP_PATH, encoding="utf-8") as f:
+            self.help_message = f.read()
+
+        layout = QVBoxLayout()
+        doc = QTextDocument()
+        doc.setHtml(self.help_message)
+        # doc.setMarkdown(self.help_message,
+        #                 QTextDocument.MarkdownFeature.MarkdownDialectGitHub)
+
+        widget = QTextEdit()
+        widget.setReadOnly(True)
+        widget.setDocument(doc)
+
+        layout.addWidget(widget)
+        self.setLayout(layout)
 
 
 class SettingsDialog(QDialog):
@@ -355,6 +448,12 @@ class MainWindow(QMainWindow):
         # === Settings menu in menu bar ===
         settings_menu = self.menuBar().addMenu("&Settings")
 
+        help_action = QAction("Help", self)
+        help_action.setStatusTip("Help")
+        help_action.triggered.connect(self.open_help_menu)
+        help_action.setShortcut("F1")
+        settings_menu.addAction(help_action)
+
         settings_action = QAction("Settings", self)
         settings_action.setStatusTip("Settings menu")
         settings_action.triggered.connect(self.open_settings_menu)
@@ -561,6 +660,15 @@ class MainWindow(QMainWindow):
             # MarkDebugDialog return 'Cancel'
             pass
 
+
+    def open_help_menu(self):
+        dlg = HelpDialog(self)
+        if dlg.exec():
+            # MarkDebugDialog return 'OK'
+            pass
+        else:
+            # MarkDebugDialog return 'Cancel'
+            pass
 
     def mark_debug_func(self):
         # Try to parce definition
