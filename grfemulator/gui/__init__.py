@@ -15,6 +15,7 @@ from .. import core
 from . import darkorange
 import time
 import traceback
+import webbrowser
 import re
 from pathlib import Path
 import sys
@@ -94,32 +95,6 @@ class Worker(QRunnable):
         finally:
             # Done
             self.signals.finished.emit()
-
-
-class HelpDialog(QDialog):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.setWindowTitle("Settings")
-        self.setWindowIcon(QIcon(LOGO_PATH))
-        default_size = int(min(parent.width(), parent.height()) * 0.7)
-        self.setMinimumSize(QSize(default_size, default_size))
-
-        with open(HELP_PATH, encoding="utf-8") as f:
-            self.help_message = f.read()
-
-        layout = QVBoxLayout()
-        doc = QTextDocument()
-        doc.setHtml(self.help_message)
-        # doc.setMarkdown(self.help_message,
-        #                 QTextDocument.MarkdownFeature.MarkdownDialectGitHub)
-
-        widget = QTextEdit()
-        widget.setReadOnly(True)
-        widget.setDocument(doc)
-
-        layout.addWidget(widget)
-        self.setLayout(layout)
 
 
 class SettingsDialog(QDialog):
@@ -662,13 +637,7 @@ class MainWindow(QMainWindow):
 
 
     def open_help_menu(self):
-        dlg = HelpDialog(self)
-        if dlg.exec():
-            # MarkDebugDialog return 'OK'
-            pass
-        else:
-            # MarkDebugDialog return 'Cancel'
-            pass
+        webbrowser.open(HELP_PATH)
 
     def mark_debug_func(self):
         # Try to parce definition
