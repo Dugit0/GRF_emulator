@@ -12,13 +12,14 @@ from PySide6.QtCore import (Qt, QObject, Signal, Slot, QRunnable, QThreadPool,
 from .LineNumberWidget import LineNumberWidget
 from .. import __version__
 from .. import core
-from . import darkorange
 import time
 import traceback
+import importlib
 import webbrowser
 import re
 from pathlib import Path
 import sys
+
 
 """
 TODO:
@@ -116,13 +117,9 @@ class SettingsDialog(QDialog):
         view_page = QWidget(self)
         self.view_page_layout = QFormLayout()
         self.color_combo_box = QComboBox(self)
-        self.schemes = {s.stem: s for s in COLOR_SCHEMES_PATH.glob("*.qss")}
-        self.color_combo_box.addItems(list(self.schemes.keys()))
-        cur_text = Path(
-                parent.settings.value("COLOR_SCHEME",
-                                      str(COLOR_SCHEMES_PATH / "Aqua.qss"),
-                                      type=str)
-                ).stem
+        self.schemes = [s.stem for s in COLOR_SCHEMES_PATH.iterdir()]
+        self.color_combo_box.addItems(self.schemes)
+        cur_text = parent.settings.value("COLOR_SCHEME", "aqua", type=str)
         self.color_combo_box.setCurrentText(cur_text)
         self.update_label = QLabel(" " * len(self.update_message))
 
@@ -147,7 +144,7 @@ class SettingsDialog(QDialog):
     def accept_settings(self):
         self.parent().settings.setValue(
                 "COLOR_SCHEME",
-                str(self.schemes[self.color_combo_box.currentText()])
+                str(self.color_combo_box.currentText())
                 )
         if not self.apply_flag:
             self.apply_flag = True
@@ -234,14 +231,15 @@ class MainWindow(QMainWindow):
         self.setGeometry(100, 100, 1200, 700)   # setting window geometry
 
         self.settings = QSettings()
-        color_scheme = self.settings.value(
-                "COLOR_SCHEME",
-                str(COLOR_SCHEMES_PATH / "Aqua.qss"),
-                type=str
-                )
+        color_scheme = str(self.settings.value("COLOR_SCHEME",
+                                           "aqua",
+                                           type=str))
         app = QCoreApplication.instance()
-        with open(color_scheme) as color_scheme_file:
-            app.setStyleSheet(color_scheme_file.read())
+        color_scheme_module = importlib.import_module(
+                "." + color_scheme,
+                package='grfemulator.gui.schemes'
+                )
+        app.setStyleSheet(color_scheme_module.getStyleSheet())
 
         layout = QHBoxLayout()
 

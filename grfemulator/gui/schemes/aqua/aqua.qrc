@@ -1,0 +1,9 @@
+<RCC>
+  <qresource>
+    <file>images/go-next-symbolic.png</file>
+    <file>images/go-previous-symbolic.png</file>
+    <file>images/go-up-symbolic.png</file>
+    <file>images/object-select-symbolic.png</file>
+    <file>aqua.qss</file>
+  </qresource>
+</RCC>
