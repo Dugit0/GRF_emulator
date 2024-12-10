@@ -1,23 +1,19 @@
-from PySide6.QtGui import (QColor, QIcon, QAction, QFont, QFontDatabase,
-                           QSyntaxHighlighter, QTextCharFormat, QTextDocument)
-from PySide6.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
-                               QMainWindow, QDialog, QTextEdit,
-                               QVBoxLayout, QHBoxLayout, QFormLayout,
-                               QPlainTextEdit, QSplitter, QTabWidget,
-                               QStatusBar, QToolBar, QComboBox, QLabel,
-                               QCheckBox, QMessageBox, QFileDialog,
+from PySide6.QtGui import (QIcon, QAction, QFontDatabase)
+from PySide6.QtWidgets import (QApplication, QWidget,
+                               QMainWindow, QDialog, QVBoxLayout, QHBoxLayout,
+                               QPlainTextEdit, QSplitter, QStatusBar, QToolBar,
+                               QLabel, QCheckBox, QMessageBox, QFileDialog,
                                QDialogButtonBox)
 from PySide6.QtCore import (Qt, QObject, Signal, Slot, QRunnable, QThreadPool,
-                            QCoreApplication, QSize, QSettings)
+                            QCoreApplication, QSettings)
+from .globalresources import LOGO_PATH, HELP_PATH
 from .linewidget import LineCountTextEdit
+from .highlighter import Highlighter
+from .settings import SettingsDialog
 from .. import __version__
 from .. import core
-import time
-import traceback
 import importlib
 import webbrowser
-import re
-from pathlib import Path
 import sys
 
 
@@ -26,10 +22,6 @@ TODO:
     QToolTip
     exitAction.setShortcut('Ctrl+Q')
 """
-
-LOGO_PATH = str(Path(__file__).resolve().parent / "logo.png")
-HELP_PATH = str(Path(__file__).resolve().parent / "help.html")
-COLOR_SCHEMES_PATH = Path(__file__).resolve().parent / "schemes"
 
 
 class WorkerSignals(QObject):
@@ -98,59 +90,6 @@ class Worker(QRunnable):
             self.signals.finished.emit()
 
 
-class SettingsDialog(QDialog):
-    def __init__(self, parent):
-        super().__init__(parent)
-
-        self.setWindowTitle("Settings")
-        self.setWindowIcon(QIcon(LOGO_PATH))
-        default_size = int(min(parent.width(), parent.height()) * 0.7)
-        self.setMinimumSize(QSize(default_size, default_size))
-
-        self.apply_flag = False
-        self.update_message = "To apply the settings, restart the application!"
-
-        layout = QVBoxLayout()
-        tabs = QTabWidget()
-
-        # View page
-        view_page = QWidget(self)
-        self.view_page_layout = QFormLayout()
-        self.color_combo_box = QComboBox(self)
-        self.schemes = [s.stem for s in COLOR_SCHEMES_PATH.iterdir()]
-        self.color_combo_box.addItems(self.schemes)
-        cur_text = parent.settings.value("COLOR_SCHEME", "aqua", type=str)
-        self.color_combo_box.setCurrentText(cur_text)
-        self.update_label = QLabel(" " * len(self.update_message))
-
-        self.view_page_layout.addRow("Color scheme:", self.color_combo_box)
-        self.view_page_layout.addRow(self.update_label, QLabel())
-        view_page.setLayout(self.view_page_layout)
-        tabs.addTab(view_page, 'View settings')
-
-        button_box = QDialogButtonBox()
-        apply_button = button_box.addButton("Apply",
-                                            QDialogButtonBox.ApplyRole)
-        cancel_button = button_box.addButton("Cancel",
-                                             QDialogButtonBox.RejectRole)
-        apply_button.clicked.connect(self.accept_settings)
-        # button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-
-        layout.addWidget(tabs)
-        layout.addWidget(button_box)
-        self.setLayout(layout)
-
-    def accept_settings(self):
-        self.parent().settings.setValue(
-                "COLOR_SCHEME",
-                str(self.color_combo_box.currentText())
-                )
-        if not self.apply_flag:
-            self.apply_flag = True
-            self.update_label.setText(self.update_message)
-
-
 class MarkDebugDialog(QDialog):
     def __init__(self, parent, func_names):
         super().__init__(parent)
@@ -174,42 +113,6 @@ class MarkDebugDialog(QDialog):
 
         self.layout.addWidget(self.button_box)
         self.setLayout(self.layout)
-
-
-class HighlighterPalette():
-    def addHighlight(self, color_name, foreground, weight=QFont.Normal):
-        new_color = QTextCharFormat()
-        new_color.setForeground(foreground)
-        new_color.setFontWeight(weight)
-        setattr(self, color_name, new_color)
-
-
-class Highlighter(QSyntaxHighlighter):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.palette = HighlighterPalette()
-        # Gruvbox light scheme
-        self.palette.addHighlight("red", QColor(204, 36, 29))
-        self.palette.addHighlight("red_bold", QColor(204, 36, 29), QFont.Bold)
-        self.palette.addHighlight("green", QColor(152, 151, 26))
-        self.palette.addHighlight("yellow", QColor(215, 153, 33))
-        self.palette.addHighlight("blue", QColor(69, 133, 136))
-        self.palette.addHighlight("purple", QColor(177, 98, 134))
-        self.palette.addHighlight("aqua", QColor(104, 157, 106))
-        self.palette.addHighlight("orange", QColor(214, 93, 14))
-
-        self._mappings = {
-                r'DEFINITION:|CALL:': self.palette.red_bold,
-                r'{|}|\(|\)|=': self.palette.orange,
-                r',': self.palette.aqua,
-                r'<-|\?': self.palette.green,
-                }
-
-    def highlightBlock(self, text):
-        for pattern, format in self._mappings.items():
-            for match in re.finditer(pattern, text):
-                start, end = match.span()
-                self.setFormat(start, end - start, format)
 
 
 class MainWindow(QMainWindow):
