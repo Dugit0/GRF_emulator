@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (QApplication, QWidget, QSystemTrayIcon,
                                QDialogButtonBox)
 from PySide6.QtCore import (Qt, QObject, Signal, Slot, QRunnable, QThreadPool,
                             QCoreApplication, QSize, QSettings)
-from .LineNumberWidget import LineNumberWidget
+from .linewidget import LineCountTextEdit
 from .. import __version__
 from .. import core
 import time
@@ -247,14 +247,11 @@ class MainWindow(QMainWindow):
         fixedfont.setPointSize(12)
 
         # Main editor and line number widget
-        self.editor = QTextEdit()
+        self.editor = LineCountTextEdit()
         self.editor.setFont(fixedfont)
-        self.editor.textChanged.connect(self.line_widget_line_count_changed)
 
         self.highlighter = Highlighter()
         self.highlighter.setDocument(self.editor.document())
-
-        self.line_widget = LineNumberWidget(self.editor)
 
         # Call editor
         self.call_editor = QPlainTextEdit()
@@ -278,7 +275,6 @@ class MainWindow(QMainWindow):
         splitter2.addWidget(splitter1)
         splitter2.setSizes([200, 100])
 
-        layout.addWidget(self.line_widget)
         layout.addWidget(splitter2)
 
 
@@ -484,13 +480,6 @@ class MainWindow(QMainWindow):
         button = dlg.exec()
         if button == QMessageBox.Yes:
             self.file_save()
-
-
-    def line_widget_line_count_changed(self):
-        # Signal for line widget
-        if self.line_widget:
-            n = int(self.editor.document().lineCount())
-            self.line_widget.changeLineCount(n)
 
 
     def get_all_file_text(self):
