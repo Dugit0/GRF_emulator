@@ -247,7 +247,7 @@ class MainWindow(QMainWindow):
         fixedfont.setPointSize(12)
 
         # Main editor and line number widget
-        self.editor = QPlainTextEdit()
+        self.editor = QTextEdit()
         self.editor.setFont(fixedfont)
         self.editor.textChanged.connect(self.line_widget_line_count_changed)
 
