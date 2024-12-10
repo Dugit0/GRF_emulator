@@ -429,16 +429,6 @@ class MainWindow(QMainWindow):
         settings_action.setShortcut("F4")
         settings_menu.addAction(settings_action)
 
-        # DEBUG menu
-        # TODO delete this function
-        # === Test menu in menu bar ===
-        # test_menu = self.menuBar().addMenu("&TEST")
-
-        # test_action = QAction("Color schemes test", self)
-        # test_action.setStatusTip("Color schemes test")
-        # test_action.triggered.connect(self.color_schemes_test)
-        # test_menu.addAction(test_action)
-
         # === Run toolbar ===
         run_toolbar = QToolBar("Edit")
         self.addToolBar(run_toolbar)
@@ -447,15 +437,6 @@ class MainWindow(QMainWindow):
 
         self.update_statusbar()         # calling update title method
         self.show()                     # showing all the components
-
-
-    # DEBUG function
-    # TODO delete this function
-    # def color_schemes_test(self):
-    #     for path in COLOR_SCHEMES_PATH.glob("*.qss"):
-    #         app = QCoreApplication.instance()
-    #         app.setStyleSheet(get_style_sheet(str(path)))
-    #         time.sleep(5)
 
 
     def closeEvent(self, event):
