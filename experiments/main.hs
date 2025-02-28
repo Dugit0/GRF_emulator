@@ -140,7 +140,7 @@ min_prime_more_than x1 = minPrimeMoreThanHelper 0
 
 main :: IO ()
 main = do
-  print $ min_prime_more_than 50
+  print $ min_prime_more_than 5
 
 
 

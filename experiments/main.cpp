@@ -235,7 +235,6 @@ unsigned Is_not_prime(unsigned x1) {
 unsigned Min_prime_more_than(unsigned x1) {
     unsigned y = 0;
     while (true) {
-        printf("y = %u\n", y);
         if (Sum(Is_not_prime(I_2_2(x1, y)), Less_eq(I_2_2(x1, y), I_2_1(x1, y))) == 0) {
             return y;
         }
@@ -246,5 +245,5 @@ unsigned Min_prime_more_than(unsigned x1) {
 // Min_prime_more_than(15);
 
 int main(void) {
-    printf("%u\n", Min_prime_more_than(15));
+    printf("%u\n", Min_prime_more_than(10));
 }
