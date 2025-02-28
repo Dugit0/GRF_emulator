@@ -171,22 +171,24 @@ def composition(func, *fargs):
     return res
 
 
-def recursion(base, func):
+def recursion(base, func, optimizations=[]):
     if base.n + 2 != func.n:
         raise ArgsError(base.n + 2, func.n)
-    def new_func(*args):
-        if args[-1] == 0:
-            return base(*args[:-1])
-        new_args = list(args[:])
-        new_args[-1] = new_args[-1] - 1
-        new_args.append(new_func(*new_args))
-        return func(*new_args)
-    # def new_func(*args):
-    #     base_args = args[:-1]
-    #     result = base(*base_args)
-    #     for i in range(1, args[-1] + 1):
-    #         result = func(*[*base_args, i - 1, result])
-    #     return result
+    if 'Orec_to_for' not in optimizations:
+        def new_func(*args):
+            if args[-1] == 0:
+                return base(*args[:-1])
+            new_args = list(args[:])
+            new_args[-1] = new_args[-1] - 1
+            new_args.append(new_func(*new_args))
+            return func(*new_args)
+    else:
+        def new_func(*args):
+            base_args = args[:-1]
+            result = base(*base_args)
+            for i in range(1, args[-1] + 1):
+                result = func(*[*base_args, i - 1, result])
+            return result
     res = Func(base.n + 1)
     res.call_func = new_func
     return res
@@ -217,7 +219,7 @@ def get_func(func_name, func_dict):
     return func_dict[func_name]
 
 
-def gen_func(tree, func_dict):
+def gen_func(tree, func_dict, optimizations):
     mod = tree.data
     if mod == 'name':
         name_val = tree.children[0].value
@@ -232,15 +234,15 @@ def gen_func(tree, func_dict):
     elif mod == 'const':
         return func_const(*list(map(lambda a: int(a.value), tree.children)))
     elif mod == 'comp':
-        return composition(*list(map(lambda a: gen_func(a, func_dict),
+        return composition(*list(map(lambda a: gen_func(a, func_dict, optimizations),
                                      tree.children)))
     elif mod == 'rec':
-        return recursion(*list(map(lambda a: gen_func(a, func_dict),
-                                   tree.children)))
+        return recursion(*(list(map(lambda a: gen_func(a, func_dict, optimizations),
+                                   tree.children)) + [optimizations]))
     elif mod == 'min':
         # if len(tree.children) != 2:
         #     raise
-        return minimisation(*list(map(lambda a: gen_func(a, func_dict),
+        return minimisation(*list(map(lambda a: gen_func(a, func_dict, optimizations),
                                       tree.children)))
         # return minimisation(*list(map(lambda a: gen_func(a), tree.children)))
     else:
@@ -262,7 +264,7 @@ def parse_code(code):
     return definition, call
 
 
-def parse_def(definition):
+def parse_def(definition, optimizations):
     func_dict = {}
     tree = my_parce(definition, "def_grammar.lark")
     # print(tree.pretty())
@@ -271,7 +273,7 @@ def parse_def(definition):
     for def_tree in tree.children:
         # print(def_tree.pretty())
         name = def_tree.children[0].children[0].value
-        func = gen_func(def_tree.children[1], func_dict)
+        func = gen_func(def_tree.children[1], func_dict, optimizations)
         func.name = name
         func_dict[name] = func
         # print(func, repr(func))
