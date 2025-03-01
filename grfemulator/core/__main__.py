@@ -6,7 +6,7 @@ arg_parser = argparse.ArgumentParser(prog="grf core",
                                      description="Interpreter of grf files")
 arg_parser.add_argument('filename')
 arg_parser.add_argument('--Orec-to-for', action='store_true')
-arg_parser.add_argument('--Osneaky-hack', action='store_true')
+arg_parser.add_argument('--Ougly-hack', action='store_true')
 args = arg_parser.parse_args()
 
 with open(args.filename) as file_inp:

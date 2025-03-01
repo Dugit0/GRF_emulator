@@ -68,11 +68,11 @@ def my_parce(code, gramm_name):
 
 # -------------- Functions --------------
 class Func:
-    def __init__(self, n=1, name='Unnamed'):
+    def __init__(self, n=1, name='Unnamed', call_func=lambda: None):
         self.n = n
         self.name = name
+        self.call_func = call_func
         self.full_name = ""
-        self.call_func = lambda: None
         self._debug = False
         self._show_call = False
         self._show_stack = False
@@ -124,6 +124,12 @@ class Func:
 #     pass
 # ================ Move ================
 
+default_funcs = {
+        "Sum": Func(2, "Sum", lambda a, b: a + b),
+        "Mul": Func(2, "Mul", lambda a, b: a * b),
+        "Diff": Func(2, "Diff", lambda a, b: max(a - b, 0)),
+        "Div": Func(2, "Div", lambda a, b: 0 if b == 0 else a // b),
+        }
 
 def func_o():
     res = Func(1, 'o')
@@ -155,6 +161,9 @@ def func_const(const, n):
         return const
     res.call_func = new_func
     return res
+
+
+
 
 
 def composition(func, *fargs):
@@ -275,6 +284,8 @@ def parse_def(definition, optimizations):
         name = def_tree.children[0].children[0].value
         func = gen_func(def_tree.children[1], func_dict, optimizations)
         func.name = name
+        if "Ougly_hack" in optimizations:
+            func = default_funcs.get(func.name, func)
         func_dict[name] = func
         # print(func, repr(func))
         # print('----')
