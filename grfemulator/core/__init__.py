@@ -52,7 +52,6 @@ def get_parser(gramm_name):
     with gramm_path.open() as file_gramm:
         grammar = file_gramm.read()
     return Lark(grammar, start="start", parser='lalr')
-    # return Lark(grammar, start="start")
 
 
 def my_parce(code, gramm_name):
@@ -73,28 +72,8 @@ class Func:
         self.name = name
         self.call_func = call_func
         self.full_name = ""
-        self._debug = False
-        self._show_call = False
-        self._show_stack = False
+        self.show_call = False
         self.debug_log = ""
-
-    @property
-    def show_call(self):
-        return self._show_call
-
-    @show_call.setter
-    def show_call(self, flag):
-        self._show_call = flag
-        self._debug = self._show_call or self._show_stack
-
-    @property
-    def show_stack(self):
-        return self._show_stack
-
-    @show_stack.setter
-    def show_stack(self, flag):
-        self._show_stack = flag
-        self._debug = self._show_stack or self._show_stack
 
     def __str__(self):
         return self.name
@@ -103,26 +82,11 @@ class Func:
         global GLOBAL_DEBUG_LOG
         if len(args) != self.n:
             raise ArgsError(self.n, len(args))
-        # if self.show_stack:
         if self.show_call:
             GLOBAL_DEBUG_LOG += (f"{self.name}"
                                  f"({', '.join(list(map(str, args)))})\n")
-            return self.call_func(*args)
-        else:
-            # return self.optimazed_call(*args)
-            return self.call_func(*args)
+        return self.call_func(*args)
 
-# ================ Move ================
-# def reqursive_mark(func, parent_prefix):
-#     func.prefix = parent_prefix + func.name
-#     if isinstance(func.call_func, Func):
-#         reqursive_mark()
-
-# def mark_function(func_name, func_dict):
-#     func_dict[func_dict].show_stack = True
-
-#     pass
-# ================ Move ================
 
 default_funcs = {
         "Sum": Func(2, "Sum", lambda a, b: a + b),
@@ -161,9 +125,6 @@ def func_const(const, n):
         return const
     res.call_func = new_func
     return res
-
-
-
 
 
 def composition(func, *fargs):
@@ -273,7 +234,7 @@ def parse_code(code):
     return definition, call
 
 
-def parse_def(definition, optimizations):
+def parse_def(definition, optimizations=[]):
     func_dict = {}
     tree = my_parce(definition, "def_grammar.lark")
     # print(tree.pretty())
