@@ -67,12 +67,12 @@ def my_parce(code, gramm_name):
 
 # -------------- Functions --------------
 class Func:
-    def __init__(self, n=1, name='Unnamed', call_func=lambda: None):
+    def __init__(self, n=1, name='Unnamed', operation='-'):
         self.n = n
         self.name = name
-        self.call_func = call_func
-        self.full_name = ""
         self.show_call = False
+        self.operation = operation
+        self.children = []
         self.debug_log = ""
 
     def __str__(self):
@@ -85,98 +85,119 @@ class Func:
         if self.show_call:
             GLOBAL_DEBUG_LOG += (f"{self.name}"
                                  f"({', '.join(list(map(str, args)))})\n")
-        return self.call_func(*args)
+        if self.operation == 'composition':
+            func = self.children[0]
+            return func(*[f(*args) for f in self.children[1:]])
+        elif self.operation == 'recursion':
+            base, func = self.children[0], self.children[1]
+            if args[-1] == 0:
+                return base(*args[:-1])
+            new_args = list(args[:])
+            new_args[-1] = new_args[-1] - 1
+            new_args.append(self.__call__(*new_args))
+            return func(*new_args)
+        elif self.operation == 'minimisation':
+            y = 0
+            while True:
+                new_args = list(args[:]) + [y]
+                if self.children[0](*new_args) == 0:
+                    return y
+                y += 1
+        else:
+            return self.children[0](*args)
 
 
-default_funcs = {
-        "Sum": Func(2, "Sum", lambda a, b: a + b),
-        "Mul": Func(2, "Mul", lambda a, b: a * b),
-        "Diff": Func(2, "Diff", lambda a, b: max(a - b, 0)),
-        "Div": Func(2, "Div", lambda a, b: 0 if b == 0 else a // b),
-        }
+# default_funcs = {
+#         "Sum": Func(2, "Sum", lambda a, b: a + b),
+#         "Mul": Func(2, "Mul", lambda a, b: a * b),
+#         "Diff": Func(2, "Diff", lambda a, b: max(a - b, 0)),
+#         "Div": Func(2, "Div", lambda a, b: 0 if b == 0 else a // b),
+#         }
 
 def func_o():
-    res = Func(1, 'o')
+    res = Func(1, 'o', 'o')
     def new_func(*args):
         return 0
-    res.call_func = new_func
+    res.children = [new_func,]
     return res
 
 
 def func_s():
-    res = Func(1, 's')
+    res = Func(1, 's', 's')
     def new_func(*args):
         return args[0] + 1
-    res.call_func = new_func
+    res.children = [new_func,]
     return res
 
 
 def func_i(n, m):
-    res = Func(n, f'i^{n}_{m}')
+    res = Func(n, f'I^{n}_{m}', f'I^{n}_{m}')
     def new_func(*args):
         return args[m - 1]
-    res.call_func = new_func
+    res.children = [new_func,]
     return res
 
 
 def func_const(const, n):
-    res = Func(n, f'{const}^{n}')
+    res = Func(n, f'{const}^{n}', f'{const}^{n}')
     def new_func(*args):
         return const
-    res.call_func = new_func
+    res.children = [new_func,]
     return res
 
 
 def composition(func, *fargs):
     n = fargs[0].n
+    if func.n != len(fargs):
+        logging.error(f"In function {func.name}")
+        raise ArgsError(func.n, len(fargs))
     for farg in fargs:
         if farg.n != n:
             # print(f"In function {farg.name}", file=sys.stderr)
             logging.error(f"In function {farg.name}")
             raise ArgsError(n, farg.n)
-    def new_func(*args):
-        return func(*[farg(*args) for farg in fargs])
-    res = Func(n)
-    res.call_func = new_func
+#     def new_func(*args):
+#         return func(*[farg(*args) for farg in fargs])
+    res = Func(n=n, operation='composition')
+    res.children = [func] + list(fargs)
     return res
 
 
 def recursion(base, func, optimizations=[]):
     if base.n + 2 != func.n:
         raise ArgsError(base.n + 2, func.n)
-    if 'Orec_to_for' not in optimizations:
-        def new_func(*args):
-            if args[-1] == 0:
-                return base(*args[:-1])
-            new_args = list(args[:])
-            new_args[-1] = new_args[-1] - 1
-            new_args.append(new_func(*new_args))
-            return func(*new_args)
-    else:
-        def new_func(*args):
-            base_args = args[:-1]
-            result = base(*base_args)
-            for i in range(1, args[-1] + 1):
-                result = func(*[*base_args, i - 1, result])
-            return result
-    res = Func(base.n + 1)
-    res.call_func = new_func
+#     if 'Orec_to_for' not in optimizations:
+#         def new_func(*args):
+#             if args[-1] == 0:
+#                 return base(*args[:-1])
+#             new_args = list(args[:])
+#             new_args[-1] = new_args[-1] - 1
+#             new_args.append(new_func(*new_args))
+#             return func(*new_args)
+#     else:
+#         def new_func(*args):
+#             base_args = args[:-1]
+#             result = base(*base_args)
+#             for i in range(1, args[-1] + 1):
+#                 result = func(*[*base_args, i - 1, result])
+#             return result
+    res = Func(n=base.n + 1, operation='recursion')
+    res.children = [base, func]
     return res
 
 
 def minimisation(func):
-    # Test it!
     if func.n == 0:
         raise ArgsError(f"<= 1", func.n)
-    def new_func(*args):
-        y = 0
-        while True:
-            new_args = list(args[:]) + [y]
-            if func(*new_args) == 0:
-                return y
-            y += 1
-    res = Func(func.n - 1)
-    res.call_func = new_func
+#     def new_func(*args):
+#         y = 0
+#         while True:
+#             new_args = list(args[:]) + [y]
+#             if func(*new_args) == 0:
+#                 return y
+#             y += 1
+    res = Func(n=func.n - 1, operation='minimisation')
+    res.children = [func]
     return res
 
 
