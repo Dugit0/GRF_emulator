@@ -242,8 +242,8 @@ unsigned Min_prime_more_than(unsigned x1) {
     }
 }
 // CALL:
-// Min_prime_more_than(15);
+// Min_prime_more_than(12);
 
 int main(void) {
-    printf("%u\n", Min_prime_more_than(10));
+    printf("%u\n", Min_prime_more_than(12));
 }

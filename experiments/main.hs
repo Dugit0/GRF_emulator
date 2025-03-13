@@ -140,8 +140,4 @@ min_prime_more_than x1 = minPrimeMoreThanHelper 0
 
 main :: IO ()
 main = do
-  print $ min_prime_more_than 5
-
-
-
--- Исследовать на min_prime_more_than(x) от x на текущей реализации, на оппортунистической оптимизации и на haskell
+  print $ is_prime 89
