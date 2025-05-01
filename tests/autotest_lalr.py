@@ -1,14 +1,19 @@
 import unittest
+from parameterized import parameterized, parameterized_class
 from grfemulator import core
 
-
+@parameterized_class(('optimizations'), [
+    # ([],),
+    # (['Orec_to_for'],),
+    (['Oopportunistic'],),
+])
 class CoreTests(unittest.TestCase):
     def test_sg(self):
         definition = """
         DEFINITION:
         Sg = 0^0 <- s { 0^2 };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(20):
             call = f"""
             CALL:
@@ -24,7 +29,7 @@ class CoreTests(unittest.TestCase):
         DEFINITION:
         Nsg = s { 0^0 } <- 0^2;
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             call = f"""
             CALL:
@@ -40,7 +45,7 @@ class CoreTests(unittest.TestCase):
         DEFINITION:
         Sum = I^1_1 <- s { I^3_3 };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -58,7 +63,7 @@ class CoreTests(unittest.TestCase):
         Sum = I^1_1 <- s { I^3_3 };
         Mul = o <- Sum { I^3_1, I^3_3 };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -76,7 +81,7 @@ class CoreTests(unittest.TestCase):
         ElDiff = 0^0 <- I^2_1;
         Diff = I^1_1 <- ElDiff { I^3_3 };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -105,7 +110,7 @@ class CoreTests(unittest.TestCase):
                            }
                       };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -125,7 +130,7 @@ class CoreTests(unittest.TestCase):
         Diff = I^1_1 <- ElDiff { I^3_3 };
         AbsDiff = Sum { Diff, Diff { I^2_2, I^2_1 } };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -145,7 +150,7 @@ class CoreTests(unittest.TestCase):
         Diff = I^1_1 <- ElDiff { I^3_3 };
         AbsDiff = Sum { Diff { I^2_1, I^2_2 }, Diff { I^2_2, I^2_1 } };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -169,7 +174,7 @@ class CoreTests(unittest.TestCase):
         F = 0^2 <- G;
         Div = F { I^2_1, I^2_2, I^2_1 };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -194,7 +199,7 @@ class CoreTests(unittest.TestCase):
         Div = F { I^2_1, I^2_2, I^2_1 };
         Rest = Diff { I^2_1, Mul { I^2_2, Div } };
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""
@@ -233,7 +238,7 @@ class CoreTests(unittest.TestCase):
         Comment 8
         */
         """.strip()
-        func_dict = core.parse_def(definition)
+        func_dict = core.parse_def(definition, optimizations=self.optimizations)
         for i in range(10):
             for j in range(10):
                 call = f"""

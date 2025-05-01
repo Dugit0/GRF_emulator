@@ -272,9 +272,9 @@ def get_opportunistic_opt(optimizations=[]):
             case "Sg":
                 base.append(func)
                 opt.append(Func(n=1,
-                                 name="Sg",
-                                 operation="-",
-                                 optimizations=optimizations))
+                                name="Sg",
+                                operation="-",
+                                optimizations=optimizations))
                 opt[-1].children = [lambda x: int(x > 0)]
             case "Nsg":
                 base.append(func)
@@ -314,18 +314,38 @@ def get_opportunistic_opt(optimizations=[]):
     return base, opt
 
 
+def opportunistic_replace(func, base_func, opt_func):
+    if func == base_func:
+        return opt_func
+    for i in range(len(func.children)):
+        if isinstance(func.children[i], Func):
+            func.children[i] = opportunistic_replace(func.children[i], base_func, opt_func)
+    return func
+
+
 def parse_def(definition, optimizations=[]):
     func_dict = no_opt_parse_def(definition)
     if "Oopportunistic" in optimizations:
         base, opt = get_opportunistic_opt(optimizations=optimizations)
-        marks = {}
-        for name, func in func_dict.items():
-            for i in range(len(base)):
-                if func == base[i]:
-                    marks[name] = i
-        for name in marks:
-            func_dict[name] = opt[marks[name]]
+        for optimization_number in range(len(base) - 1, -1, -1):
+            for name, func in func_dict.items():
+                func_dict[name] = opportunistic_replace(func,
+                                                        base[optimization_number],
+                                                        opt[optimization_number])
     return func_dict
+
+# def parse_def(definition, optimizations=[]):
+#     func_dict = no_opt_parse_def(definition)
+#     if "Oopportunistic" in optimizations:
+#         base, opt = get_opportunistic_opt(optimizations=optimizations)
+#         marks = {}
+#         for name, func in func_dict.items():
+#             for i in range(len(base)):
+#                 if func == base[i]:
+#                     marks[name] = i
+#         for name in marks:
+#             func_dict[name] = opt[marks[name]]
+#     return func_dict
 
 
 def parse_call(call, func_dict):
