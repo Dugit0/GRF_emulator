@@ -135,7 +135,7 @@ class Func:
 #         }
 
 def func_o(optimizations=[]):
-    res = Func(1, 'o', 'o')
+    res = Func(1, 'o', 'o', optimizations=optimizations)
     def new_func(*args):
         return 0
     res.children = [new_func,]
@@ -143,7 +143,7 @@ def func_o(optimizations=[]):
 
 
 def func_s(optimizations=[]):
-    res = Func(1, 's', 's')
+    res = Func(1, 's', 's', optimizations=optimizations)
     def new_func(*args):
         return args[0] + 1
     res.children = [new_func,]
@@ -151,7 +151,7 @@ def func_s(optimizations=[]):
 
 
 def func_i(n, m, optimizations=[]):
-    res = Func(n, f'I^{n}_{m}', f'I^{n}_{m}')
+    res = Func(n, f'I^{n}_{m}', f'I^{n}_{m}', optimizations=optimizations)
     def new_func(*args):
         return args[m - 1]
     res.children = [new_func,]
@@ -159,7 +159,7 @@ def func_i(n, m, optimizations=[]):
 
 
 def func_const(const, n, optimizations=[]):
-    res = Func(n, f'{const}^{n}', f'{const}^{n}')
+    res = Func(n, f'{const}^{n}', f'{const}^{n}', optimizations=optimizations)
     def new_func(*args):
         return const
     res.children = [new_func,]
@@ -176,7 +176,7 @@ def composition(func, *fargs, optimizations=[]):
             # print(f"In function {farg.name}", file=sys.stderr)
             logging.error(f"In function {farg.name}")
             raise ArgsError(n, farg.n)
-    res = Func(n=n, operation='composition')
+    res = Func(n=n, operation='composition', optimizations=optimizations)
     res.children = [func] + list(fargs)
     return res
 
@@ -192,7 +192,7 @@ def recursion(base, func, optimizations=[]):
 def minimisation(func, optimizations=[]):
     if func.n == 0:
         raise ArgsError(f"<= 1", func.n)
-    res = Func(n=func.n - 1, operation='minimisation')
+    res = Func(n=func.n - 1, operation='minimisation', optimizations=optimizations)
     res.children = [func]
     return res
 
@@ -249,13 +249,13 @@ def parse_code(code):
     return definition, call
 
 
-def no_opt_parse_def(definition):
+def no_opt_parse_def(definition, optimizations=[]):
     func_dict = {}
     tree = my_parce(definition, "def_grammar.lark")
     logging.info(tree.pretty())
     for def_tree in tree.children:
         name = def_tree.children[0].children[0].value
-        func = gen_func(def_tree.children[1], func_dict, optimizations=[])
+        func = gen_func(def_tree.children[1], func_dict, optimizations=optimizations)
         func.name = name
         func_dict[name] = func
         logging.info(f"{func} {repr(func)}")
@@ -265,7 +265,7 @@ def get_opportunistic_opt(optimizations=[]):
     base_funcs_path = importlib.resources.files(resources).joinpath("base_functions.grf")
     with base_funcs_path.open() as base_funcs_file:
         base_funcs_def = base_funcs_file.read()
-    base_funcs = no_opt_parse_def(base_funcs_def)
+    base_funcs = no_opt_parse_def(base_funcs_def, optimizations=optimizations)
     base, opt = [], []
     for name, func in base_funcs.items():
         match name:
@@ -324,7 +324,7 @@ def opportunistic_replace(func, base_func, opt_func):
 
 
 def parse_def(definition, optimizations=[]):
-    func_dict = no_opt_parse_def(definition)
+    func_dict = no_opt_parse_def(definition, optimizations=optimizations)
     if "Oopportunistic" in optimizations:
         base, opt = get_opportunistic_opt(optimizations=optimizations)
         for optimization_number in range(len(base) - 1, -1, -1):
