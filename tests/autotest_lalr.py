@@ -4,8 +4,8 @@ from grfemulator import core
 
 @parameterized_class(('optimizations'), [
     # ([],),
-    # (['Orec_to_for'],),
-    (['Oopportunistic'],),
+    (['Orec_to_for'],),
+    # (['Oopportunistic'],),
 ])
 class CoreTests(unittest.TestCase):
     def test_sg(self):
