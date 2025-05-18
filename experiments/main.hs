@@ -140,4 +140,4 @@ min_prime_more_than x1 = minPrimeMoreThanHelper 0
 
 main :: IO ()
 main = do
-  print $ is_prime 89
+  print $ is_prime 107

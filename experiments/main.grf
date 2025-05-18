@@ -68,4 +68,4 @@ Min_prime_more_than = ? (Sum {
                         });
 
 CALL:
-Is_prime(229);
+Is_prime(113);

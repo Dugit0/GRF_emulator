@@ -245,5 +245,5 @@ unsigned Min_prime_more_than(unsigned x1) {
 // Min_prime_more_than(12);
 
 int main(void) {
-    printf("%u\n", Min_prime_more_than(12));
+    printf("%u\n", Is_prime(17));
 }
